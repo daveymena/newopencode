@@ -49,10 +49,10 @@ echo "  Arrancando servicios..."
 echo "============================================================"
 
 # 1. Motor OpenCode (interno)
+cd "${OPENCODE_WORKSPACE:-/workspace}"
 opencode serve \
   --port "$OPENCODE_INTERNAL_PORT" \
-  --hostname 0.0.0.0 \
-  "${OPENCODE_WORKSPACE:-/workspace}" &
+  --hostname 0.0.0.0 &
 OC_PID=$!
 echo "  ✓ Motor OpenCode PID=$OC_PID → puerto $OPENCODE_INTERNAL_PORT"
 
