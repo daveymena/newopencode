@@ -88,7 +88,7 @@ app.post("/__vision", express.json({ limit: "20mb" }), async (req, res) => {
   // ── Sin API key de visión disponible ────────────────────────
   return res.status(503).json({
     error: "No hay API key de visión disponible",
-    hint: "Agrega ANTHROPIC_API_KEY, OPENAI_API_KEY o GOOGLE_GENERATIVE_AI_API_KEY en Replit Secrets"
+    hint: "Agrega ANTHROPIC_API_KEY, OPENAI_API_KEY o GOOGLE_GENERATIVE_AI_API_KEY en las Variables de Entorno de EasyPanel"
   });
 });
 

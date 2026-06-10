@@ -11,6 +11,7 @@ if [ -z "$1" ]; then
   echo "  ./colmena.sh open <ID> <URL>        -> Abre una página web en el navegador del dispositivo"
   echo "  ./colmena.sh notify <ID> <Mensaje>  -> Muestra una notificación push/Windows en el dispositivo"
   echo "  ./colmena.sh cmd <ID> <Comando>     -> Ejecuta un comando de consola (CMD) en la PC"
+  echo "  ./colmena.sh screenshot <ID>        -> Toma una captura de pantalla del PC y la guarda como screenshot.png"
   exit 1
 fi
 
@@ -57,6 +58,18 @@ if [ "$ACTION" == "cmd" ]; then
        -H "Content-Type: application/json" \
        -d "{\"type\":\"cmd\", \"command\":\"$CMD\"}"
   echo ""
+  exit 0
+fi
+
+if [ "$ACTION" == "screenshot" ]; then
+  echo "Tomando captura de pantalla de la PC remota..."
+  # Descargamos el JSON con la captura en base64 al temporal
+  curl -s -X POST "http://localhost:3000/api/agents/$AGENT_ID" \
+       -H "Content-Type: application/json" \
+       -d "{\"type\":\"screenshot\"}" > /tmp/screenshot.json
+  
+  # Extraemos el base64 y guardamos como screenshot.png para que OpenCode pueda verlo
+  node -e "const fs=require('fs'); const j=JSON.parse(fs.readFileSync('/tmp/screenshot.json')); if(j.base64){ fs.writeFileSync('screenshot.png', Buffer.from(j.base64, 'base64')); console.log('✓ Captura guardada exitosamente en screenshot.png en la raiz del proyecto.'); } else { console.log('Error tomando captura:', j.error || 'Desconocido'); }"
   exit 0
 fi
 
