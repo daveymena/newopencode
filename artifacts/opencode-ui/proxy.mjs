@@ -234,15 +234,16 @@ const apiProxy = createProxyMiddleware({
   changeOrigin: true,
 });
 
-app.use(express.json());
-
 // ── API para gestionar Agentes ────────────────────────────
-app.get("/api/agents", (req, res) => {
+const customApi = express.Router();
+customApi.use(express.json());
+
+customApi.get("/agents", (req, res) => {
   const list = [...pcAgents.entries()].map(([id, a]) => ({ id, name: a.name, sysinfo: a.sysinfo, connectedAt: a.connectedAt }));
   res.json(list);
 });
 
-app.post("/api/agents/:id", async (req, res) => {
+customApi.post("/agents/:id", async (req, res) => {
   try {
     const result = await sendToAgent(req.params.id, req.body);
     res.json(result);
@@ -251,7 +252,7 @@ app.post("/api/agents/:id", async (req, res) => {
   }
 });
 
-app.post("/api/broadcast/open_url", async (req, res) => {
+customApi.post("/broadcast/open_url", async (req, res) => {
   try {
     const { url: targetUrl } = req.body;
     const results = await Promise.allSettled([...pcAgents.keys()].map(id => sendToAgent(id, { type: "open_url", url: targetUrl }, 10000)));
@@ -260,6 +261,8 @@ app.post("/api/broadcast/open_url", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+app.use("/api", customApi);
 
 app.use((req, res, next) => {
   // Solo aplicamos el proxy HTML a peticiones que esperan HTML
