@@ -245,6 +245,16 @@ hr,
   box-sizing: border-box;
 }
 
+/* ── Ocultar en móviles para no tapar los botones de la UI ── */
+@media (max-width: 768px) {
+  #oc-evolved-header {
+    display: none !important;
+  }
+  #root {
+    padding-top: 0 !important;
+  }
+}
+
 /* ── Glassmorphism en tooltips y popovers ── */
 [data-radix-popper-content-wrapper] > *,
 [role="dialog"],
