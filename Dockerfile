@@ -48,10 +48,8 @@ RUN curl -fsSL https://bun.sh/install | bash \
 # PYTHON 3.12 + pip + uv + poetry
 # ============================================================
 RUN apt-get update && apt-get install -y \
-    python3.12 python3.12-dev python3.12-venv python3-pip \
-    && update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1 \
-    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 \
-    && pip3 install --no-cache-dir uv poetry \
+    python3 python3-dev python3-venv python3-pip \
+    && pip3 install --no-cache-dir --break-system-packages uv poetry \
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================================
