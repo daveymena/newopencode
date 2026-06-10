@@ -80,7 +80,7 @@ async function readOpencodeData() {
   try {
     // Leer sesiones
     const sessionsRaw = execSync(
-      `"${ocBin}" db --format json "SELECT id, title, created_at, updated_at, model FROM session ORDER BY updated_at DESC LIMIT 500"`,
+      `"${ocBin}" db --format json "SELECT id, title, updated_at, model FROM session ORDER BY updated_at DESC LIMIT 500"`,
       { encoding: 'utf8', timeout: 10000 }
     ).trim();
 
@@ -92,6 +92,10 @@ async function readOpencodeData() {
 
     const sessions = sessionsRaw ? JSON.parse(sessionsRaw) : [];
     const messages = messagesRaw ? JSON.parse(messagesRaw) : [];
+    
+    // Asignar created_at artificial si no existe
+    sessions.forEach(s => { if(!s.created_at) s.created_at = s.updated_at || new Date().toISOString(); });
+    
     return { sessions, messages };
   } catch (err) {
     console.warn('[sync] ⚠ No se pudo leer SQLite:', err.message);

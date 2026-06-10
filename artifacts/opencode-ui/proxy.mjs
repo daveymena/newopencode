@@ -265,9 +265,9 @@ customApi.post("/broadcast/open_url", async (req, res) => {
 // ── Dashboard de Mente Colmena ──────────────────────────────
 app.get("/colmena", (req, res) => {
   const host = req.headers.host;
-  const wssUrl = \`wss://\${host}/agent\`;
+  const wssUrl = `wss://${host}/agent`;
   
-  const html = \`
+  const html = `
     <!DOCTYPE html>
     <html lang="es">
     <head>
@@ -302,22 +302,22 @@ app.get("/colmena", (req, res) => {
         <div class="box">
           <h2>📱 Agente para Android (Termux)</h2>
           <p>Abre la app <strong>Termux</strong> en tu celular, copia y pega el siguiente comando. Ya está preconfigurado con tu URL:</p>
-          <code>curl -fsSL -o agente.sh "https://raw.githubusercontent.com/daveymena/openco/main/agent-local/instalar-movil.sh" && bash agente.sh "\${wssUrl}"</code>
+          <code>curl -fsSL -o agente.sh "https://raw.githubusercontent.com/daveymena/openco/main/agent-local/instalar-movil.sh" && bash agente.sh "${wssUrl}"</code>
         </div>
         
         <a href="/" class="back-link">← Volver a OpenCode</a>
       </div>
     </body>
     </html>
-  \`;
+  `;
   res.send(html);
 });
 
 app.get("/download-pc-agent", (req, res) => {
   const host = req.headers.host;
-  const wssUrl = \`wss://\${host}/agent\`;
+  const wssUrl = `wss://${host}/agent`;
   
-  const batContent = \`@echo off
+  const batContent = `@echo off
 title OpenCode PC Agent
 echo ========================================
 echo Iniciando Agente Local de OpenCode (PC)
@@ -340,11 +340,11 @@ echo Instalando libreria 'ws'...
 call npm install ws --no-save >nul 2>&1
 
 echo Conectando a la colmena...
-set AGENT_SERVER_URL=\${wssUrl}
+set AGENT_SERVER_URL=${wssUrl}
 node pc-agent.mjs
 
 pause
-\`;
+`;
 
   res.setHeader('Content-disposition', 'attachment; filename=INSTALAR-AGENTE.bat');
   res.setHeader('Content-type', 'application/x-bat');
