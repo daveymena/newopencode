@@ -236,14 +236,13 @@ const apiProxy = createProxyMiddleware({
 
 // ── API para gestionar Agentes ────────────────────────────
 const customApi = express.Router();
-customApi.use(express.json());
 
 customApi.get("/agents", (req, res) => {
   const list = [...pcAgents.entries()].map(([id, a]) => ({ id, name: a.name, sysinfo: a.sysinfo, connectedAt: a.connectedAt }));
   res.json(list);
 });
 
-customApi.post("/agents/:id", async (req, res) => {
+customApi.post("/agents/:id", express.json(), async (req, res) => {
   try {
     const result = await sendToAgent(req.params.id, req.body);
     res.json(result);
@@ -252,7 +251,7 @@ customApi.post("/agents/:id", async (req, res) => {
   }
 });
 
-customApi.post("/broadcast/open_url", async (req, res) => {
+customApi.post("/broadcast/open_url", express.json(), async (req, res) => {
   try {
     const { url: targetUrl } = req.body;
     const results = await Promise.allSettled([...pcAgents.keys()].map(id => sendToAgent(id, { type: "open_url", url: targetUrl }, 10000)));
@@ -261,6 +260,8 @@ customApi.post("/broadcast/open_url", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+app.use("/api", customApi);
 
 // ── Dashboard de Mente Colmena ──────────────────────────────
 app.get("/colmena", (req, res) => {
