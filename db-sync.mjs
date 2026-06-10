@@ -75,7 +75,7 @@ async function readOpencodeData() {
   const { execSync } = await import('child_process');
   const ocBin = process.platform === 'win32'
     ? path.join(__dirname, '..', 'bin', 'opencode.exe')
-    : path.join(__dirname, '..', 'bin', 'opencode');
+    : 'opencode';
 
   try {
     // Leer sesiones
