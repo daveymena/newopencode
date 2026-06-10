@@ -31,6 +31,12 @@ if (fs.existsSync(CONFIG_FILE)) {
   } catch {}
 }
 
+// Variables de entorno siempre tienen prioridad
+const envUrl = process.env.EASYPANEL_URL || process.env.AGENT_SERVER_URL;
+if (envUrl) {
+  config.serverUrl = envUrl;
+}
+
 function saveConfig() {
   const dir = path.dirname(CONFIG_FILE);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
