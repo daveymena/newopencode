@@ -155,7 +155,7 @@ COPY db-sync.mjs /app/db-sync.mjs
 
 # Instalar dependencias del proxy y sync
 RUN mkdir -p /app && cd /app && npm init -y && \
-    npm install express http-proxy-middleware pg --save
+    npm install express http-proxy-middleware pg ws --save
 
 # Copiar script de inicio
 COPY docker/start.sh /usr/local/bin/start-opencode.sh
