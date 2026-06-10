@@ -123,6 +123,50 @@ async function executeCommand(cmd) {
       return { ok: true, path: outPath, base64, mime: 'image/png' };
     }
 
+    // ── Control de Ratón y Teclado ──
+    if (type === 'mouse_move') {
+      const { x, y } = cmd;
+      const ps = `Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(${x}, ${y})`;
+      await execAsync(`powershell.exe -Command "${ps}"`);
+      return { ok: true, message: `Ratón movido a ${x}, ${y}` };
+    }
+
+    if (type === 'mouse_click') {
+      const ps = `
+$Code = @'
+using System;
+using System.Runtime.InteropServices;
+public class Mouse {
+    [DllImport("user32.dll")]
+    public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
+    public static void Click() { mouse_event(0x0002 | 0x0004, 0, 0, 0, 0); }
+    public static void RightClick() { mouse_event(0x0008 | 0x0010, 0, 0, 0, 0); }
+}
+'@
+Add-Type -TypeDefinition $Code
+${cmd.button === 'right' ? '[Mouse]::RightClick()' : '[Mouse]::Click()'}
+`;
+      const tempScript = path.join(os.tmpdir(), `click_${Date.now()}.ps1`);
+      fs.writeFileSync(tempScript, ps);
+      await execAsync(`powershell.exe -ExecutionPolicy Bypass -File "${tempScript}"`);
+      fs.unlinkSync(tempScript);
+      return { ok: true, message: `Clic (${cmd.button || 'left'}) ejecutado` };
+    }
+
+    if (type === 'keyboard_type') {
+      const text = (cmd.text || '').replace(/'/g, "''"); // Escapar comillas simples
+      const ps = `Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('${text}')`;
+      await execAsync(`powershell.exe -Command "${ps}"`);
+      return { ok: true, message: `Texto escrito` };
+    }
+
+    if (type === 'keyboard_press') {
+      const key = (cmd.key || '').replace(/'/g, "''"); // Ej: {ENTER}, {ESC}, ^{c}
+      const ps = `Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('${key}')`;
+      await execAsync(`powershell.exe -Command "${ps}"`);
+      return { ok: true, message: `Tecla ${key} presionada` };
+    }
+
     // Notificación de Windows
     if (type === 'notify') {
       const msg = cmd.message || cmd.data;
