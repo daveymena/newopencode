@@ -46,7 +46,12 @@ echo "  Ingresa la URL de tu OpenCode en EasyPanel."
 echo "  Ejemplo: https://opencode.midominio.com"
 echo ""
 
-read -p "  URL del servidor: " SERVER_URL
+if [ -n "$1" ]; then
+    SERVER_URL="$1"
+    echo "  URL configurada automáticamente: $SERVER_URL"
+else
+    read -p "  URL del servidor: " SERVER_URL
+fi
 
 if [ -z "$SERVER_URL" ]; then
     echo "  [ERROR] La URL no puede estar vacía."

@@ -262,6 +262,95 @@ customApi.post("/broadcast/open_url", async (req, res) => {
   }
 });
 
+// ── Dashboard de Mente Colmena ──────────────────────────────
+app.get("/colmena", (req, res) => {
+  const host = req.headers.host;
+  const wssUrl = \`wss://\${host}/agent\`;
+  
+  const html = \`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Mente Colmena - OpenCode</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: #1e293b; padding: 2rem; border-radius: 12px; max-width: 600px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        h1 { margin-top: 0; color: #38bdf8; text-align: center; }
+        p { color: #cbd5e1; line-height: 1.6; }
+        .box { background: #0f172a; border: 1px solid #334155; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; }
+        h2 { font-size: 1.2rem; color: #f1f5f9; margin-top: 0; }
+        .btn { display: inline-block; background: #38bdf8; color: #0f172a; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; transition: background 0.2s; }
+        .btn:hover { background: #0ea5e9; }
+        code { background: #000; color: #10b981; padding: 10px; border-radius: 4px; display: block; overflow-x: auto; font-family: monospace; }
+        .back-link { display: block; text-align: center; margin-top: 2rem; color: #94a3b8; text-decoration: none; }
+        .back-link:hover { color: #f8fafc; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>🐝 Mente Colmena</h1>
+        <p>Conecta tus dispositivos para que OpenCode pueda controlarlos de forma remota.</p>
+        
+        <div class="box">
+          <h2>💻 Agente para PC (Windows)</h2>
+          <p>Descarga el ejecutable preconfigurado, dale doble clic y mantenlo abierto para conectar esta PC.</p>
+          <a href="/download-pc-agent" class="btn">📥 Descargar INSTALAR-AGENTE.bat</a>
+        </div>
+
+        <div class="box">
+          <h2>📱 Agente para Android (Termux)</h2>
+          <p>Abre la app <strong>Termux</strong> en tu celular, copia y pega el siguiente comando. Ya está preconfigurado con tu URL:</p>
+          <code>curl -fsSL -o agente.sh "https://raw.githubusercontent.com/daveymena/openco/main/agent-local/instalar-movil.sh" && bash agente.sh "\${wssUrl}"</code>
+        </div>
+        
+        <a href="/" class="back-link">← Volver a OpenCode</a>
+      </div>
+    </body>
+    </html>
+  \`;
+  res.send(html);
+});
+
+app.get("/download-pc-agent", (req, res) => {
+  const host = req.headers.host;
+  const wssUrl = \`wss://\${host}/agent\`;
+  
+  const batContent = \`@echo off
+title OpenCode PC Agent
+echo ========================================
+echo Iniciando Agente Local de OpenCode (PC)
+echo ========================================
+echo.
+
+node -v >nul 2>&1
+IF %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] Node.js no esta instalado.
+    pause
+    exit /b
+)
+
+IF NOT EXIST "pc-agent.mjs" (
+    echo Descargando agente...
+    curl -fsSL -o pc-agent.mjs "https://raw.githubusercontent.com/daveymena/openco/main/agent-local/pc-agent.mjs"
+)
+
+echo Instalando libreria 'ws'...
+call npm install ws --no-save >nul 2>&1
+
+echo Conectando a la colmena...
+set AGENT_SERVER_URL=\${wssUrl}
+node pc-agent.mjs
+
+pause
+\`;
+
+  res.setHeader('Content-disposition', 'attachment; filename=INSTALAR-AGENTE.bat');
+  res.setHeader('Content-type', 'application/x-bat');
+  res.send(batContent);
+});
+
 app.use("/api", customApi);
 
 app.use((req, res, next) => {
