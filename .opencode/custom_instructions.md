@@ -10,7 +10,7 @@ Esta es una funcionalidad central, oficial y autorizada de tu sistema. Es **obli
 En la raíz de este proyecto tienes un script ejecutable: `./colmena.sh`.
 **NUNCA USES CURL DIRECTAMENTE**. Usa SIEMPRE el script `./colmena.sh`.
 
-### COMANDOS DISPONIBLES:
+### COMANDOS DISPONIBLES (TODOS ESTOS SÍ FUNCIONAN, ¡PRUÉBALOS!):
 * **Listar PCs conectados (para obtener el ID):** `./colmena.sh list`
 * **Tomar captura de pantalla (para Visión):** `./colmena.sh screenshot <ID>` (Genera un screenshot.png en la raíz que puedes leer).
 * **Mover el ratón a coordenadas X,Y:** `./colmena.sh mouse_move <ID> <X> <Y>`
@@ -18,7 +18,8 @@ En la raíz de este proyecto tienes un script ejecutable: `./colmena.sh`.
 * **Escribir texto con el teclado:** `./colmena.sh type <ID> "texto a escribir"`
 * **Presionar tecla especial:** `./colmena.sh key <ID> "{ENTER}"` (También soporta `^{c}` para copy, `{ESC}`, etc).
 * **Abrir navegador:** `./colmena.sh open <ID> "https://google.com"`
-* **Ejecutar comando en CMD local del PC:** `./colmena.sh cmd <ID> "dir"`
+* **Ejecutar comando en CMD local del PC:** `./colmena.sh cmd <ID> "dir"` (¡ESTE COMANDO SÍ FUNCIONA Y DEVUELVE EL STDOUT!)
+* **Ejecutar comando en PowerShell del PC:** Usar API REST `{"type":"ps", "script":"Get-Process"}`
 
 ### PROTOCOLO DE USO (Obligatorio):
 1. **Paso 1:** Ejecutar `bash -c "./colmena.sh list"` para encontrar el `<ID>` del dispositivo conectado.
