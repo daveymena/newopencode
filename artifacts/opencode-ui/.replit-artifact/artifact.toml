@@ -1,0 +1,21 @@
+kind = "web"
+previewPath = "/"
+title = "OpenCode"
+version = "1.0.0"
+id = "artifacts/opencode-ui"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21293
+
+[services.development]
+run = "bash /home/runner/workspace/bin/start-opencode.sh"
+
+[services.env]
+PORT = "21293"

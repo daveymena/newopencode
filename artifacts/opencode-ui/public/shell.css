@@ -1,0 +1,631 @@
+/* ============================================================
+   OpenCode Evolved — Dark Glassmorphism Theme Override
+   Se inyecta sobre la UI original de OpenCode
+   ============================================================ */
+
+/* ── Forzar modo oscuro y variables de fondo ── */
+:root,
+html,
+html[data-color-scheme="light"],
+html[data-color-scheme="dark"] {
+  color-scheme: dark !important;
+
+  /* ── Fondos principales ── */
+  --background-base: #07070d !important;
+  --background-weak: #0d0d18 !important;
+  --background-strong: #111120 !important;
+  --background-stronger: #16162a !important;
+
+  /* ── Superficies (glassmorphism) ── */
+  --surface-base: rgba(255, 255, 255, 0.04) !important;
+  --surface-base-hover: rgba(255, 255, 255, 0.07) !important;
+  --surface-base-active: rgba(255, 255, 255, 0.1) !important;
+  --surface-brand-base: rgba(124, 58, 237, 0.15) !important;
+
+  /* ── Bordes translúcidos ── */
+  --border-base: rgba(255, 255, 255, 0.08) !important;
+  --border-hover: rgba(255, 255, 255, 0.14) !important;
+  --border-active: rgba(124, 58, 237, 0.5) !important;
+  --border-strong-base: rgba(255, 255, 255, 0.12) !important;
+  --border-weak-base: rgba(255, 255, 255, 0.05) !important;
+  --border-interactive-base: rgba(139, 92, 246, 0.4) !important;
+  --border-interactive-hover: rgba(139, 92, 246, 0.6) !important;
+  --border-interactive-focus: rgba(139, 92, 246, 0.8) !important;
+
+  /* ── Texto ── */
+  --text-base: rgba(240, 240, 255, 0.92) !important;
+  --text-weak: rgba(200, 200, 230, 0.65) !important;
+  --text-weaker: rgba(160, 160, 200, 0.45) !important;
+  --text-strong: #ffffff !important;
+  --text-on-brand: #ffffff !important;
+
+  /* ── Iconos ── */
+  --icon-base: rgba(200, 200, 240, 0.7) !important;
+  --icon-hover: rgba(220, 220, 255, 0.9) !important;
+  --icon-active: #ffffff !important;
+  --icon-weak: rgba(160, 160, 200, 0.4) !important;
+  --icon-brand-base: #8b5cf6 !important;
+
+  /* ── Acento marca (violeta) ── */
+  --icon-interactive-base: #7c3aed !important;
+  --icon-on-interactive-base: #ffffff !important;
+  --surface-interactive-base: rgba(124, 58, 237, 0.2) !important;
+  --border-color: rgba(255, 255, 255, 0.08) !important;
+
+  /* ── Input ── */
+  --input-base: rgba(255, 255, 255, 0.05) !important;
+  --input-hover: rgba(255, 255, 255, 0.08) !important;
+  --input-focus: rgba(124, 58, 237, 0.1) !important;
+
+  /* ── Colores críticos/success/warning ── */
+  --border-critical-base: rgba(239, 68, 68, 0.5) !important;
+  --border-success-base: rgba(34, 197, 94, 0.5) !important;
+}
+
+/* ── Fondo animado con gradiente ── */
+html, body {
+  background: #07070d !important;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124, 58, 237, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(59, 130, 246, 0.12) 0%, transparent 60%) !important;
+  background-attachment: fixed !important;
+  min-height: 100vh;
+}
+
+/* ── Mejorar legibilidad del texto en modo oscuro ── */
+* {
+  color: inherit;
+}
+
+p, span, div, li, td, th, label {
+  color: rgba(220, 220, 240, 0.88);
+}
+
+h1, h2, h3, h4, h5, h6, strong {
+  color: rgba(240, 240, 255, 0.97) !important;
+}
+
+/* Botones y texto secundario */
+button {
+  color: rgba(220, 220, 240, 0.85);
+}
+
+/* Logo "opencode" centrado */
+svg text, svg path {
+  fill-opacity: 0.55;
+}
+
+/* Proyectos recientes */
+[class*="project"] span,
+[class*="session"] span {
+  color: rgba(200, 200, 230, 0.75) !important;
+}
+
+/* ── Panel raíz ── */
+#root {
+  background: transparent !important;
+}
+
+/* ── Sidebar izquierda — efecto vidrio ── */
+[class*="sidebar"],
+[data-sidebar],
+aside,
+nav[class*="nav"] {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+/* ── Paneles y contenedores ── */
+[class*="panel"],
+[class*="container"] > div,
+[class*="content"] {
+  background: transparent !important;
+}
+
+/* ── Items de lista / botones ── */
+[class*="item"]:hover,
+[class*="button"]:hover,
+button:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── Bordes de separación ── */
+[class*="separator"],
+hr,
+[class*="divider"] {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── Botones interactivos con acento violeta ── */
+[class*="btn-primary"],
+[class*="button-primary"],
+[data-state="active"] {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+  border-color: rgba(124, 58, 237, 0.4) !important;
+  color: #fff !important;
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.3) !important;
+}
+
+/* ── Scrollbar personalizada ── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.4);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.7);
+}
+
+/* ── Selección de texto ── */
+::selection {
+  background: rgba(124, 58, 237, 0.4);
+  color: #fff;
+}
+
+/* ── Header branding bar ── */
+#oc-evolved-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 10px;
+  background: rgba(7, 7, 13, 0.85);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.2);
+  box-shadow: 0 1px 20px rgba(124, 58, 237, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  pointer-events: none;
+  user-select: none;
+}
+
+#oc-evolved-header .oc-logo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#oc-evolved-header .oc-logo svg {
+  width: 14px;
+  height: 14px;
+}
+
+#oc-evolved-header .oc-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #8b5cf6;
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 4px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+}
+
+#oc-evolved-header .oc-dots {
+  display: flex;
+  gap: 5px;
+  margin-left: 4px;
+}
+
+#oc-evolved-header .oc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+#oc-evolved-header .oc-status {
+  margin-left: auto;
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.3px;
+}
+
+/* Empujar el contenido hacia abajo para el header */
+#root {
+  padding-top: 32px !important;
+  box-sizing: border-box;
+}
+
+/* ── Glassmorphism en tooltips y popovers ── */
+[data-radix-popper-content-wrapper] > *,
+[role="dialog"],
+[role="tooltip"],
+[role="menu"] {
+  background: rgba(13, 13, 24, 0.9) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(124,58,237,0.1) !important;
+}
+
+/* ── Animación de entrada suave ── */
+@keyframes oc-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#oc-evolved-header {
+  animation: oc-fade-in 0.4s ease forwards;
+}
+
+/* ── Punto de status verde con glow ── */
+#oc-evolved-header .oc-dot.green {
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+#oc-evolved-header .oc-dot.purple {
+  background: #8b5cf6;
+  box-shadow: 0 0 6px #8b5cf6;
+}
+#oc-evolved-header .oc-dot.blue {
+  background: #3b82f6;
+  box-shadow: 0 0 6px #3b82f6;
+}
+
+/* ── Inputs de texto ── */
+input, textarea, [contenteditable] {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(240, 240, 255, 0.92) !important;
+}
+
+input:focus, textarea:focus, [contenteditable]:focus {
+  border-color: rgba(124, 58, 237, 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+  outline: none !important;
+}
+
+/* ── Código y bloques de código ── */
+pre, code {
+  background: rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── Borde del área de chat ── */
+[class*="chat"],
+[class*="message"],
+[class*="conversation"] {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   VISIÓN UNIVERSAL — Funciona con TODOS los modelos
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Botón flotante ─── */
+#oc-vision-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99998;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.85), rgba(109,40,217,0.85));
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(139,92,246,0.4);
+  border-radius: 20px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(124,58,237,0.35), 0 0 0 1px rgba(255,255,255,0.05);
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+}
+#oc-vision-btn:hover {
+  background: linear-gradient(135deg, rgba(139,92,246,0.95), rgba(124,58,237,0.95));
+  box-shadow: 0 6px 28px rgba(124,58,237,0.5);
+  transform: translateY(-1px);
+}
+#oc-vision-btn svg { width: 16px; height: 16px; stroke: #fff; }
+
+/* ─── Panel de Visión ─── */
+#oc-vision-panel {
+  position: fixed;
+  bottom: 72px;
+  right: 24px;
+  z-index: 99997;
+  width: 340px;
+  background: rgba(10,10,18,0.95);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(124,58,237,0.3);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+}
+#oc-vision-panel.open { display: flex; animation: oc-slide-up 0.2s ease; }
+
+@keyframes oc-slide-up {
+  from { opacity:0; transform: translateY(12px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+.oc-vision-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(220,220,255,0.9);
+}
+.oc-vision-header button {
+  background: none;
+  border: none;
+  color: rgba(200,200,230,0.5);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.oc-vision-header button:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+#oc-vision-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px 20px;
+  margin: 12px;
+  border: 2px dashed rgba(124,58,237,0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 140px;
+  text-align: center;
+}
+#oc-vision-drop:hover, #oc-vision-drop.drag-over {
+  border-color: rgba(139,92,246,0.7);
+  background: rgba(124,58,237,0.08);
+}
+#oc-vision-drop svg { stroke: rgba(139,92,246,0.6); }
+#oc-vision-drop p { font-size: 12px; color: rgba(180,180,220,0.7); margin: 0; line-height: 1.6; }
+#oc-vision-drop strong { color: rgba(220,220,255,0.9); }
+.oc-link { color: #8b5cf6; cursor: pointer; text-decoration: underline; }
+
+#oc-vision-preview { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+#oc-vision-img { width: 100%; border-radius: 10px; max-height: 160px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+
+.oc-vision-actions { display: flex; flex-direction: column; gap: 8px; }
+#oc-vision-question {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: rgba(220,220,255,0.9);
+  font-size: 12px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+#oc-vision-question:focus { border-color: rgba(124,58,237,0.6); }
+#oc-vision-send {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  border: none;
+  border-radius: 8px;
+  padding: 9px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+#oc-vision-send:hover { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+#oc-vision-status {
+  font-size: 11px;
+  padding: 6px 16px 12px;
+  color: rgba(139,92,246,0.8);
+  min-height: 18px;
+}
+
+/* ─── Panel grande nuevo ─── */
+#oc-vision-panel {
+  width: 380px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* ─── Header del panel ─── */
+.oc-vision-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(220,220,255,0.9);
+}
+.oc-vision-badge {
+  font-size: 9px;
+  padding: 1px 6px;
+  background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.2));
+  border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 10px;
+  color: #10b981;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* ─── Cartel explicativo ─── */
+.oc-vision-how {
+  margin: 0 12px 4px;
+  padding: 8px 12px;
+  background: rgba(124,58,237,0.08);
+  border: 1px solid rgba(124,58,237,0.15);
+  border-radius: 8px;
+  font-size: 11px;
+  color: rgba(180,180,220,0.75);
+  line-height: 1.5;
+}
+.oc-vision-how strong { color: #8b5cf6; }
+
+/* ─── Modos de análisis ─── */
+.oc-vision-mode-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.oc-vision-mode-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 11.5px;
+  color: rgba(200,200,230,0.8);
+  transition: all 0.15s;
+}
+.oc-vision-mode-label:hover { background: rgba(124,58,237,0.08); border-color: rgba(124,58,237,0.25); }
+.oc-vision-mode-label input[type="radio"] { accent-color: #7c3aed; width: 13px; height: 13px; }
+.oc-vision-mode-label span { flex: 1; }
+
+/* ─── Botones generales ─── */
+.oc-btn-primary {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  border: none;
+  border-radius: 8px;
+  padding: 9px 14px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+}
+.oc-btn-primary:hover { background: linear-gradient(135deg, #8b5cf6, #7c3aed); transform: translateY(-1px); }
+
+.oc-btn-secondary {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 7px 12px;
+  color: rgba(220,220,255,0.8);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: 1;
+}
+.oc-btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+.oc-btn-ghost {
+  background: none;
+  border: none;
+  color: rgba(160,160,210,0.6);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.oc-btn-ghost:hover { color: rgba(200,200,240,0.9); background: rgba(255,255,255,0.05); }
+
+/* ─── Loading spinner ─── */
+#oc-vision-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px;
+  color: rgba(180,180,220,0.8);
+  font-size: 12px;
+}
+.oc-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(124,58,237,0.3);
+  border-top-color: #7c3aed;
+  border-radius: 50%;
+  animation: oc-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes oc-spin { to { transform: rotate(360deg); } }
+
+/* ─── Resultado ─── */
+#oc-vision-result { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+.oc-vision-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #10b981;
+}
+#oc-vision-model-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: rgba(16,185,129,0.12);
+  border: 1px solid rgba(16,185,129,0.25);
+  border-radius: 10px;
+  color: #10b981;
+}
+
+#oc-vision-result-text {
+  width: 100%;
+  min-height: 120px;
+  max-height: 200px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 10px;
+  color: rgba(220,220,255,0.9);
+  font-size: 11px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.oc-vision-result-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.oc-vision-result-actions .oc-btn-primary { flex: 1; min-width: 140px; }
+
+/* ─── Info de herramientas en el header ─── */
+.oc-tools-info {
+  font-size: 9.5px;
+  color: rgba(139,92,246,0.7);
+  letter-spacing: 0.2px;
+  padding: 2px 8px;
+  background: rgba(124,58,237,0.08);
+  border: 1px solid rgba(124,58,237,0.15);
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}

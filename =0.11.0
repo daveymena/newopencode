@@ -1,0 +1,41 @@
+Looking in indexes: http://package-firewall.replit.local/pypi/simple/
+Collecting pandas
+  Downloading http://package-firewall.replit.local/pypi/packages/1f/18/aae8c0aa69a386a3255940e9317f793808ea79d0a525a97a903366bb2569/pandas-2.3.3-cp39-cp39-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (12.8 MB)
+Collecting numpy
+  Downloading http://package-firewall.replit.local/pypi/packages/b9/14/78635daab4b07c0930c919d451b8bf8c164774e6a3413aed04a6d95758ce/numpy-2.0.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (19.5 MB)
+Collecting ta
+  Using cached ta-0.11.0-py3-none-any.whl
+Collecting websocket-client==1.8.0
+  Downloading http://package-firewall.replit.local/pypi/packages/5a/84/44687a29792a70e111c5c477230a72c4b957d88d16141199bf9acb7537a3/websocket_client-1.8.0-py3-none-any.whl (58 kB)
+Collecting requests
+  Downloading http://package-firewall.replit.local/pypi/packages/1e/db/4254e3eabe8020b458f1a747140d32277ec7a271daf1d235b70dc0b4e6e3/requests-2.32.5-py3-none-any.whl (64 kB)
+Collecting rich
+  Downloading http://package-firewall.replit.local/pypi/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl (310 kB)
+Collecting python-dotenv
+  Downloading http://package-firewall.replit.local/pypi/packages/14/1b/a298b06749107c305e1fe0f814c6c74aea7b2f1e10989cb30f544a1b3253/python_dotenv-1.2.1-py3-none-any.whl (21 kB)
+Collecting tzdata>=2022.7
+  Downloading http://package-firewall.replit.local/pypi/packages/ce/e4/dccd7f47c4b64213ac01ef921a1337ee6e30e8c6466046018326977efd95/tzdata-2026.2-py2.py3-none-any.whl (349 kB)
+Collecting python-dateutil>=2.8.2
+  Downloading http://package-firewall.replit.local/pypi/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Collecting pytz>=2020.1
+  Downloading http://package-firewall.replit.local/pypi/packages/ec/dd/96da98f892250475bdf2328112d7468abdd4acc7b902b6af23f4ed958ea0/pytz-2026.2-py2.py3-none-any.whl (510 kB)
+Collecting six>=1.5
+  Downloading http://package-firewall.replit.local/pypi/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl (11 kB)
+Collecting idna<4,>=2.5
+  Downloading http://package-firewall.replit.local/pypi/packages/1e/5e/d4e9f1a599fb8e573b7b87160658329fbf28d19eac2718f51fc3def3aa5a/idna-3.18-py3-none-any.whl (65 kB)
+Collecting certifi>=2017.4.17
+  Downloading http://package-firewall.replit.local/pypi/packages/59/8c/57e832b7af6d7c5abe66eb3fbe3a3a32f4d11ea23a1aa7131371035be991/certifi-2026.5.20-py3-none-any.whl (134 kB)
+Collecting charset_normalizer<4,>=2
+  Downloading http://package-firewall.replit.local/pypi/packages/2e/92/bdcf94997e06b223d826df3abed45a5ad6e17f609b7df9d25cd23b5bde30/charset_normalizer-3.4.7-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (208 kB)
+Collecting urllib3<3,>=1.21.1
+  Downloading http://package-firewall.replit.local/pypi/packages/39/08/aaaad47bc4e9dc8c725e68f9d04865dbcb2052843ff09c97b08904852d84/urllib3-2.6.3-py3-none-any.whl (131 kB)
+Collecting markdown-it-py>=2.2.0
+  Downloading http://package-firewall.replit.local/pypi/packages/42/d7/1ec15b46af6af88f19b8e5ffea08fa375d433c998b8a7639e76935c14f1f/markdown_it_py-3.0.0-py3-none-any.whl (87 kB)
+Collecting pygments<3.0.0,>=2.13.0
+  Downloading http://package-firewall.replit.local/pypi/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl (1.2 MB)
+Collecting mdurl~=0.1
+  Downloading http://package-firewall.replit.local/pypi/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+Installing collected packages: six, tzdata, pytz, python-dateutil, numpy, mdurl, urllib3, pygments, pandas, markdown-it-py, idna, charset-normalizer, certifi, websocket-client, ta, rich, requests, python-dotenv
+Successfully installed certifi-2026.5.20 charset-normalizer-3.4.7 idna-3.18 markdown-it-py-3.0.0 mdurl-0.1.2 numpy-2.0.2 pandas-2.3.3 pygments-2.20.0 python-dateutil-2.9.0.post0 python-dotenv-1.2.1 pytz-2026.2 requests-2.32.5 rich-15.0.0 six-1.17.0 ta-0.11.0 tzdata-2026.2 urllib3-2.6.3 websocket-client-1.8.0
+WARNING: You are using pip version 21.1.3; however, version 26.0.1 is available.
+You should consider upgrading via the '/nix/store/nki9ywqzbvz68vr75kn2r7g1q84f5agy-python3-3.9.6/bin/python3.9 -m pip install --upgrade pip' command.

@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'Fira Code', monospace;
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+}
+
+:root {
+  --background: 0 0% 4%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 7%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 7%;
+  --popover-foreground: 0 0% 98%;
+  
+  --primary: 191 97% 41%; /* Cyan-400 */
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 240 4% 16%;
+  --secondary-foreground: 0 0% 98%;
+  
+  --muted: 240 5% 16%;
+  --muted-foreground: 240 5% 65%;
+  
+  --accent: 240 4% 16%;
+  --accent-foreground: 0 0% 98%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --border: 240 6% 15%;
+  --input: 240 6% 15%;
+  --ring: 191 97% 41%;
+
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+/* Custom Scrollbar for terminal & editor vibe */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 5px;
+  border: 2px solid hsl(var(--background));
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Markdown prose styles for chat */
+.prose pre {
+  @apply bg-[#1e1e1e] border border-border p-4 rounded-lg my-4 overflow-x-auto font-mono text-sm;
+}
+.prose code {
+  @apply bg-[#1e1e1e] text-[#e5e5e5] px-1.5 py-0.5 rounded text-sm font-mono border border-border/50;
+}
+.prose pre code {
+  @apply bg-transparent border-0 p-0 text-inherit;
+}
+.prose p {
+  @apply leading-relaxed mb-4 last:mb-0;
+}
+.prose ul {
+  @apply list-disc list-inside mb-4 pl-4;
+}
+.prose ol {
+  @apply list-decimal list-inside mb-4 pl-4;
+}

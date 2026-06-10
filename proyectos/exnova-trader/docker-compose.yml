@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  exnova-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: exnova-trading-bot
+    restart: unless-stopped
+    environment:
+      # ── Credenciales Exnova ──
+      - EXNOVA_EMAIL=${EXNOVA_EMAIL}
+      - EXNOVA_PASSWORD=${EXNOVA_PASSWORD}
+      - ACCOUNT_TYPE=${ACCOUNT_TYPE:-PRACTICE}
+
+      # ── Trading ──
+      - CAPITAL_PER_TRADE=${CAPITAL_PER_TRADE:-10.0}
+      - INITIAL_BALANCE=${INITIAL_BALANCE:-749.79}
+      - EXPIRATION_TIME=${EXPIRATION_TIME:-120}
+      - DEFAULT_ASSET=${DEFAULT_ASSET:-AUDUSD-OTC}
+      - ASSETS=${ASSETS:-AUDUSD-OTC,EURUSD-OTC,GBPUSD-OTC}
+      - MIN_CONFIDENCE=${MIN_CONFIDENCE:-0.65}
+      - MAX_CONSEC_LOSSES=${MAX_CONSEC_LOSSES:-6}
+
+      # ── LLM (opcional) ──
+      - USE_LLM=${USE_LLM:-false}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-google/gemini-2.0-flash-exp:free}
+      - NVIDIA_NIM_BRIDGE_URL=${NVIDIA_NIM_BRIDGE_URL:-}
+      - NVIDIA_NIM_BRIDGE_API_KEY=${NVIDIA_NIM_BRIDGE_API_KEY:-}
+      - NVIDIA_NIM_BRIDGE_MODEL=${NVIDIA_NIM_BRIDGE_MODEL:-meta/llama-3.1-8b-instruct}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - GITHUB_MODEL=${GITHUB_MODEL:-gpt-4o}
+
+    volumes:
+      # Persistir datos de aprendizaje
+      - bot_data:/app/bot/data
+      - bot_models:/app/bot/models
+      - bot_logs:/app/bot/logs
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  bot_data:
+  bot_models:
+  bot_logs:

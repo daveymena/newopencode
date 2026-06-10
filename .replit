@@ -1,0 +1,33 @@
+modules = ["nodejs-24"]
+
+[[artifacts]]
+id = "artifacts/api-server"
+
+[[artifacts]]
+id = "artifacts/mockup-sandbox"
+
+[deployment]
+router = "application"
+deploymentTarget = "autoscale"
+
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
+
+[workflows]
+runButton = "Project"
+
+[agent]
+stack = "PNPM_WORKSPACE"
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
+
+[userenv]
+
+[userenv.shared]
+SUPABASE_URL = "https://rzkmwvvezpijejiasowe.supabase.co"
+SUPABASE_DATABASE_URL = "postgresql://postgres:OpenCode_Evo_2026!@db.rzkmwvvezpijejiasowe.supabase.co:5432/postgres"
+SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdWJhc2UiLCJyZWYiOiJyemttd3Z2ZXpwaWplamlhc293ZSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJpYXQiOjE3NDI1ODMxMTIsImV4cCI6MjA1ODE1OTExMn0.S_i_l0v1eGsYcTVMfUqMA_YquSsw5F"

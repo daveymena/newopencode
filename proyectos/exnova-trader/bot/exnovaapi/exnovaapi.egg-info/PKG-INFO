@@ -1,0 +1,18 @@
+Metadata-Version: 2.4
+Name: exnovaapi
+Version: 0.1.0
+Summary: Wrapper Python para Exnova API
+Home-page: https://github.com/cassDS/exnovaapi
+Author: L0k1
+Author-email: cassioms764@gmail.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Requires-Dist: pylint
+Requires-Dist: requests
+Requires-Dist: websocket-client==1.8.0
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: summary

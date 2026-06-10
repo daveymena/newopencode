@@ -1,0 +1,74 @@
+# ============================================================
+# OpenCode - Configuración para EasyPanel
+# Sube este repositorio a GitHub y úsalo en EasyPanel
+# como "App from GitHub" → selecciona este repo
+# ============================================================
+
+services:
+  opencode:
+    type: app
+    build:
+      type: dockerfile
+      file: Dockerfile
+    domains:
+      - host: "$(PRIMARY_DOMAIN)"
+        port: 3000
+        https: true
+    env:
+      # Puerto
+      PORT: "3000"
+      OPENCODE_WORKSPACE: /workspace
+
+      # ---- GRATUITOS (solo registro) ----
+      # Groq → https://console.groq.com/keys
+      GROQ_API_KEY: ""
+
+      # OpenRouter → https://openrouter.ai/keys
+      OPENROUTER_API_KEY: ""
+
+      # Cerebras → https://cloud.cerebras.ai
+      CEREBRAS_API_KEY: ""
+
+      # Together AI → https://api.together.xyz
+      TOGETHER_AI_API_KEY: ""
+
+      # ---- DE PAGO OPCIONALES ----
+      ANTHROPIC_API_KEY: ""
+      OPENAI_API_KEY: ""
+      GOOGLE_GENERATIVE_AI_API_KEY: ""
+      MISTRAL_API_KEY: ""
+      XAI_API_KEY: ""
+
+      # ---- Ollama (local en el mismo servidor) ----
+      OLLAMA_HOST: ""
+
+    mounts:
+      # Proyectos y workspace
+      - type: volume
+        name: opencode-workspace
+        mountPath: /workspace
+      # Base de datos SQLite (sesiones y memoria persistente)
+      - type: volume
+        name: opencode-data
+        mountPath: /root/.local/share/opencode
+      # Configuración de OpenCode
+      - type: volume
+        name: opencode-config
+        mountPath: /root/.config/opencode
+
+    resources:
+      # Ajusta según tu servidor
+      memoryLimit: 2048  # 2GB RAM mínimo
+      cpuLimit: 2        # 2 núcleos mínimo
+
+  # ---- Ollama (opcional, para modelos locales gratuitos) ----
+  # Para activarlo, descomenta este bloque y actualiza OLLAMA_HOST arriba
+  # ollama:
+  #   type: app
+  #   image: ollama/ollama:latest
+  #   ports:
+  #     - "11434"
+  #   mounts:
+  #     - type: volume
+  #       name: ollama-models
+  #       mountPath: /root/.ollama

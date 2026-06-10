@@ -1,0 +1,73 @@
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# compiled output
+dist
+tmp
+out-tsc
+*.tsbuildinfo
+.expo
+.expo-shared
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+# Replit
+.cache/
+.local/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Bot - datos de aprendizaje (se regeneran)
+bot/data/
+bot/models/
+bot/logs/
+
+# Bot - logs y estado
+bot/bot_output.log
+bot/*.log
+bot_status.json
+bot/brain/adaptive_state.json
+bot/brain/trade_log.jsonl
+bot/brain/trade_summary.json
+bot/brain/learning_state.json
+
+# Env (contiene credenciales)
+.env
+.env.local

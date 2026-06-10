@@ -1,0 +1,421 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: OpenCode UI API - Chat con IA, archivos y terminal
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health check
+  - name: chat
+    description: Chat con modelos de IA
+  - name: files
+    description: Gestión de archivos del proyecto
+  - name: terminal
+    description: Ejecución de comandos en terminal
+  - name: models
+    description: Modelos de IA disponibles
+  - name: sessions
+    description: Sesiones de conversación
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /models:
+    get:
+      operationId: listModels
+      tags: [models]
+      summary: Lista de modelos disponibles
+      responses:
+        "200":
+          description: Lista de modelos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelsResponse"
+
+  /sessions:
+    get:
+      operationId: listSessions
+      tags: [sessions]
+      summary: Lista de sesiones de chat
+      responses:
+        "200":
+          description: Lista de sesiones
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionsResponse"
+    post:
+      operationId: createSession
+      tags: [sessions]
+      summary: Crear nueva sesión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionRequest"
+      responses:
+        "201":
+          description: Sesión creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+
+  /sessions/{sessionId}:
+    get:
+      operationId: getSession
+      tags: [sessions]
+      summary: Obtener sesión por ID
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sesión encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+    delete:
+      operationId: deleteSession
+      tags: [sessions]
+      summary: Eliminar sesión
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Sesión eliminada
+
+  /sessions/{sessionId}/messages:
+    get:
+      operationId: getMessages
+      tags: [chat]
+      summary: Obtener mensajes de una sesión
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista de mensajes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessagesResponse"
+
+  /chat:
+    post:
+      operationId: sendMessage
+      tags: [chat]
+      summary: Enviar mensaje al modelo de IA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: Respuesta del modelo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+
+  /files:
+    get:
+      operationId: listFiles
+      tags: [files]
+      summary: Lista el árbol de archivos del proyecto
+      parameters:
+        - name: path
+          in: query
+          schema:
+            type: string
+            default: "."
+      responses:
+        "200":
+          description: Árbol de archivos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileTreeResponse"
+
+  /files/read:
+    get:
+      operationId: readFile
+      tags: [files]
+      summary: Leer contenido de un archivo
+      parameters:
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Contenido del archivo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileContentResponse"
+
+  /files/write:
+    post:
+      operationId: writeFile
+      tags: [files]
+      summary: Escribir o crear un archivo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WriteFileRequest"
+      responses:
+        "200":
+          description: Archivo guardado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /terminal/execute:
+    post:
+      operationId: executeCommand
+      tags: [terminal]
+      summary: Ejecutar un comando en la terminal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExecuteCommandRequest"
+      responses:
+        "200":
+          description: Resultado del comando
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommandResult"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    Model:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        provider:
+          type: string
+        description:
+          type: string
+      required: [id, name, provider]
+
+    ModelsResponse:
+      type: object
+      properties:
+        models:
+          type: array
+          items:
+            $ref: "#/components/schemas/Model"
+      required: [models]
+
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        model:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        messageCount:
+          type: integer
+      required: [id, title, model, createdAt, updatedAt, messageCount]
+
+    SessionsResponse:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Session"
+      required: [sessions]
+
+    CreateSessionRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        model:
+          type: string
+      required: [title, model]
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        sessionId:
+          type: string
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        createdAt:
+          type: string
+        tokens:
+          type: integer
+      required: [id, sessionId, role, content, createdAt]
+
+    MessagesResponse:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+      required: [messages]
+
+    ChatRequest:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        message:
+          type: string
+        model:
+          type: string
+        systemPrompt:
+          type: string
+      required: [sessionId, message, model]
+
+    ChatResponse:
+      type: object
+      properties:
+        message:
+          $ref: "#/components/schemas/Message"
+        inputTokens:
+          type: integer
+        outputTokens:
+          type: integer
+      required: [message]
+
+    FileNode:
+      type: object
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        type:
+          type: string
+          enum: [file, directory]
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileNode"
+        size:
+          type: integer
+      required: [name, path, type]
+
+    FileTreeResponse:
+      type: object
+      properties:
+        tree:
+          $ref: "#/components/schemas/FileNode"
+      required: [tree]
+
+    FileContentResponse:
+      type: object
+      properties:
+        path:
+          type: string
+        content:
+          type: string
+        language:
+          type: string
+        size:
+          type: integer
+      required: [path, content]
+
+    WriteFileRequest:
+      type: object
+      properties:
+        path:
+          type: string
+        content:
+          type: string
+      required: [path, content]
+
+    ExecuteCommandRequest:
+      type: object
+      properties:
+        command:
+          type: string
+        cwd:
+          type: string
+        timeout:
+          type: integer
+          description: Timeout en milisegundos
+      required: [command]
+
+    CommandResult:
+      type: object
+      properties:
+        stdout:
+          type: string
+        stderr:
+          type: string
+        exitCode:
+          type: integer
+        duration:
+          type: integer
+      required: [stdout, stderr, exitCode]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success]

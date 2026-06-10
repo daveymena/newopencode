@@ -1,0 +1,27 @@
+# ============================================================
+# ARCHIVOS SENSIBLES - NO SUBIR A GIT
+# ============================================================
+.env
+*.log
+*.zip
+
+# Binarios grandes
+bin/opencode
+bin/opencode.exe
+bin/opencode-linux
+bin/opencode-win/
+bin/opencode-windows-x64.zip
+
+# Node modules y carpetas grandes/locales
+node_modules/
+.opencode/node_modules/
+artifacts/opencode-ui/node_modules/
+.local/
+.cache/
+.npm/
+.config/opencode/
+
+# Archivos temporales
+oc-win-err*.log
+opencode-win*.log
+test-db.mjs

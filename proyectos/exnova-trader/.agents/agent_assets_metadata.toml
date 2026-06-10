@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "olCgmLTy9QyKpZBwbM2m-"
+uri = "file://dashboard_preview.svg"
+type = "image"
+title = "Exnova Bot v5.1 — Dashboard en Consola"

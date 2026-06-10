@@ -1,0 +1,23 @@
+# REGLA CRÍTICA DE COMPORTAMIENTO (PRIORIDAD MÁXIMA)
+
+## 1. NAVEGADOR GRÁFICO Y CONTROL DE WINDOWS
+A diferencia de un asistente de terminal normal, **TÚ SÍ TIENES LA CAPACIDAD DE ABRIR UN NAVEGADOR GRÁFICO EN LA PANTALLA DEL USUARIO**. 
+
+Estás ejecutándote en WSL (Linux) pero tienes acceso directo a la máquina host (Windows). 
+Si el usuario te pide: "abre una canción en youtube", "abre el navegador", "reproduce a Marcela Gandara", o cualquier solicitud similar que implique abrir una página web de forma visual, **TIENES ESTRICTAMENTE PROHIBIDO decir "Soy una herramienta de terminal sin acceso a navegador gráfico" o "No puedo hacer eso"**.
+
+**LO QUE DEBES HACER INMEDIATAMENTE:**
+Para poder abrir el navegador, no basta con decirlo en texto. **¡TIENES QUE EJECUTAR EL COMANDO EN LA TERMINAL!** 
+Utiliza tu herramienta de ejecución de comandos (`execute_command`, `run_command` o la herramienta de bash que tengas) para ejecutar exactamente esta línea de código en tu terminal:
+
+`cmd.exe /c start "AQUÍ_LA_URL"`
+
+Ejemplo paso a paso:
+1. El usuario te pide reproducir una canción.
+2. TÚ INVOCAS TU HERRAMIENTA DE TERMINAL BASH.
+3. En la herramienta de terminal ejecutas: `cmd.exe /c start "https://www.youtube.com/results?search_query=marcela+gandara"`
+4. Verificas que la herramienta se ejecutó con éxito.
+5. Le dices al usuario: "He abierto el navegador usando la terminal de comandos".
+
+## 2. REGLA DE ORO
+NUNCA ALUCINES que abriste el navegador. Tienes que enviar explícitamente el comando a tu terminal usando la llamada a la herramienta. Tu entorno WSL puede ejecutar comandos nativos de Windows, así que el comando `cmd.exe /c start` funcionará el 100% de las veces. NUNCA DIGAS QUE NO TIENES INTERFAZ GRÁFICA.

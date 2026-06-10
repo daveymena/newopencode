@@ -1,0 +1,15 @@
+packages:
+  "@uiw/react-codemirror": "Code editor component"
+  "@uiw/codemirror-theme-vscode": "Dark professional theme for code editor"
+  "framer-motion": "Smooth layout animations"
+  "lucide-react": "Beautiful icons"
+  "date-fns": "Date formatting"
+  "react-markdown": "Rendering AI responses"
+  "remark-gfm": "Github flavored markdown for tables and code blocks"
+  "clsx": "Utility for constructing className strings conditionally"
+  "tailwind-merge": "Utility function to efficiently merge Tailwind CSS classes"
+
+notes:
+  - Chat streaming uses POST /api/chat and returns SSE (Server-Sent Events)
+  - Need to handle POST fetch stream manually since EventSource only supports GET
+  - Assuming UI components like button, input exist in @/components/ui/ based on directory structure

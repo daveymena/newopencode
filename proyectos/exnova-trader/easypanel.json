@@ -1,0 +1,94 @@
+{
+  "name": "Exnova Trading Bot",
+  "description": "Trading bot automatizado para Exnova con inteligencia adaptativa, cascada de tendencia H1→M15→M5→M1, y aprendizaje continuo 24/7",
+  "type": "docker-compose",
+  "categories": ["trading", "automation"],
+  "icon": "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/expertadvisor.svg",
+  "env": [
+    {
+      "name": "EXNOVA_EMAIL",
+      "label": "Email de Exnova",
+      "description": "Correo electrónico de tu cuenta Exnova",
+      "required": true
+    },
+    {
+      "name": "EXNOVA_PASSWORD",
+      "label": "Contraseña de Exnova",
+      "description": "Contraseña de tu cuenta Exnova",
+      "required": true,
+      "type": "password"
+    },
+    {
+      "name": "ACCOUNT_TYPE",
+      "label": "Tipo de cuenta",
+      "description": "PRACTICE para demo, REAL para cuenta real",
+      "default": "PRACTICE",
+      "options": ["PRACTICE", "REAL"]
+    },
+    {
+      "name": "ASSETS",
+      "label": "Divisas a operar",
+      "description": "Separadas por coma. Ej: AUDUSD-OTC,EURUSD-OTC,GBPUSD-OTC",
+      "default": "AUDUSD-OTC,EURUSD-OTC,GBPUSD-OTC"
+    },
+    {
+      "name": "CAPITAL_PER_TRADE",
+      "label": "Capital por operación ($)",
+      "description": "Monto fijo a arriesgar por cada trade",
+      "default": "10.0",
+      "type": "number"
+    },
+    {
+      "name": "INITIAL_BALANCE",
+      "label": "Balance inicial ($)",
+      "description": "Balance de tu cuenta Exnova",
+      "default": "749.79",
+      "type": "number"
+    },
+    {
+      "name": "MIN_CONFIDENCE",
+      "label": "Confianza mínima",
+      "description": "Mínima confianza del sistema para ejecutar un trade (0.0 - 1.0)",
+      "default": "0.65",
+      "type": "number"
+    },
+    {
+      "name": "MAX_CONSEC_LOSSES",
+      "label": "Pérdidas consecutivas máximas",
+      "description": "Detener trading tras N pérdidas seguidas",
+      "default": "6",
+      "type": "number"
+    },
+    {
+      "name": "USE_LLM",
+      "label": "Usar LLM (IA avanzada)",
+      "description": "Habilitar razonamiento con modelo de lenguaje (requiere API key)",
+      "default": "false",
+      "options": ["true", "false"]
+    },
+    {
+      "name": "OPENROUTER_API_KEY",
+      "label": "OpenRouter API Key",
+      "description": "API Key de OpenRouter para usar modelos LLM (ej: Gemini, GPT)",
+      "required": false,
+      "type": "password"
+    },
+    {
+      "name": "OPENROUTER_MODEL",
+      "label": "Modelo OpenRouter",
+      "description": "Modelo a usar via OpenRouter",
+      "default": "google/gemini-2.0-flash-exp:free"
+    }
+  ],
+  "volumes": {
+    "bot_data": {
+      "description": "Datos de aprendizaje y memoria del mercado"
+    },
+    "bot_models": {
+      "description": "Modelos ML entrenados"
+    },
+    "bot_logs": {
+      "description": "Historial de operaciones"
+    }
+  }
+}
