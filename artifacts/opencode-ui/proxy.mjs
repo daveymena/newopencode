@@ -185,7 +185,7 @@ const shellCSS = `<link rel="stylesheet" href="/__shell/shell.css">`;
 const shellJS  = `<script src="/__shell/shell.js"></script>`;
 
 // ── Proxy principal → OpenCode ──────────────────────────────
-const proxyOptions = {
+const htmlProxy = createProxyMiddleware({
   target: OPENCODE_TARGET,
   changeOrigin: true,
   selfHandleResponse: true,
@@ -198,14 +198,12 @@ const proxyOptions = {
       const isHTML = contentType.includes("text/html");
 
       if (!isHTML) {
-        // Para respuestas normales (JSON, SSE, imágenes), mantener todos los encabezados originales
         Object.entries(proxyRes.headers).forEach(([key, val]) => res.setHeader(key, val));
         res.statusCode = proxyRes.statusCode;
         proxyRes.pipe(res);
         return;
       }
 
-      // SOLO para HTML, eliminamos content-length porque vamos a modificar el body
       delete proxyRes.headers["content-security-policy"];
       delete proxyRes.headers["x-frame-options"];
       delete proxyRes.headers["content-length"];
@@ -229,7 +227,12 @@ const proxyOptions = {
       }
     },
   },
-};
+});
+
+const apiProxy = createProxyMiddleware({
+  target: OPENCODE_TARGET,
+  changeOrigin: true,
+});
 
 app.use(express.json());
 
@@ -258,7 +261,15 @@ app.post("/api/broadcast/open_url", async (req, res) => {
   }
 });
 
-app.use("/", createProxyMiddleware(proxyOptions));
+app.use((req, res, next) => {
+  // Solo aplicamos el proxy HTML a peticiones que esperan HTML
+  if (req.headers.accept && req.headers.accept.includes("text/html")) {
+    htmlProxy(req, res, next);
+  } else {
+    // Todo lo demás (API, SSE, WebSockets, JS, CSS) pasa directo sin modificaciones
+    apiProxy(req, res, next);
+  }
+});
 
 // ── Servidor HTTP con soporte WebSocket ─────────────────────
 const server = createServer(app);
