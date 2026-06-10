@@ -78,9 +78,9 @@ async function readOpencodeData() {
     : 'opencode';
 
   try {
-    // Leer sesiones
+    // Leer sesiones (sin updated_at ni created_at ya que SQLite no las tiene en OpenCode 1.17)
     const sessionsRaw = execSync(
-      `"${ocBin}" db --format json "SELECT id, title, updated_at, model FROM session ORDER BY updated_at DESC LIMIT 500"`,
+      `"${ocBin}" db --format json "SELECT id, title, model FROM session LIMIT 500"`,
       { encoding: 'utf8', timeout: 10000 }
     ).trim();
 
@@ -94,7 +94,10 @@ async function readOpencodeData() {
     const messages = messagesRaw ? JSON.parse(messagesRaw) : [];
     
     // Asignar created_at artificial si no existe
-    sessions.forEach(s => { if(!s.created_at) s.created_at = s.updated_at || new Date().toISOString(); });
+    sessions.forEach(s => { 
+      s.created_at = new Date().toISOString(); 
+      s.updated_at = s.created_at; 
+    });
     
     return { sessions, messages };
   } catch (err) {
