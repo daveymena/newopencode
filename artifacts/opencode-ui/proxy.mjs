@@ -266,7 +266,7 @@ app.use("/api", customApi);
 // ── Dashboard de Mente Colmena ──────────────────────────────
 app.get("/colmena", (req, res) => {
   const host = req.headers.host;
-  const wssUrl = `wss://${host}/agent`;
+  const wssUrl = `wss://${host}`;
   
   const html = `
     <!DOCTYPE html>
@@ -316,7 +316,7 @@ app.get("/colmena", (req, res) => {
 
 app.get("/download-pc-agent", (req, res) => {
   const host = req.headers.host;
-  const wssUrl = `wss://${host}/agent`;
+  const wssUrl = `wss://${host}`;
   
   const batContent = `@echo off
 title OpenCode PC Agent

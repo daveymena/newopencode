@@ -148,7 +148,8 @@ let ws = null;
 let reconnectTimer = null;
 
 function connect() {
-  const url = config.serverUrl.replace(/^http/, 'ws') + '/agent';
+  let base = config.serverUrl.replace(/^http/, 'ws').replace(/\/agent\/?$/, '');
+  const url = base + '/agent';
   console.log(`[agent] Conectando a ${url}...`);
 
   ws = new WebSocket(url, {
