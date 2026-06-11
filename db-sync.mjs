@@ -81,13 +81,13 @@ async function readOpencodeData() {
     // Leer sesiones (esquema real de OpenCode 1.17)
     const sessionsRaw = execSync(
       `"${ocBin}" db --format json "SELECT id, title, model FROM session LIMIT 500"`,
-      { encoding: 'utf8', timeout: 10000 }
+      { encoding: 'utf8', timeout: 10000, maxBuffer: 1024 * 1024 * 50 }
     ).trim();
 
     // Leer mensajes usando esquema real: id, session_id, time_created, data (JSON blob)
     const messagesRaw = execSync(
       `"${ocBin}" db --format json "SELECT id, session_id, time_created, data FROM message ORDER BY time_created DESC LIMIT 2000"`,
-      { encoding: 'utf8', timeout: 10000 }
+      { encoding: 'utf8', timeout: 10000, maxBuffer: 1024 * 1024 * 50 }
     ).trim();
 
     const sessions = sessionsRaw ? JSON.parse(sessionsRaw) : [];
