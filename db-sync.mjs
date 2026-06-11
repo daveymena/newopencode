@@ -74,34 +74,62 @@ async function initDatabase() {
 async function readOpencodeData() {
   const { execSync } = await import('child_process');
   const ocBin = process.platform === 'win32'
-    ? path.join(__dirname, '..', 'bin', 'opencode.exe')
+    ? path.join(__dirname, 'bin', 'opencode.exe')
     : 'opencode';
 
   try {
-    // Leer sesiones (sin updated_at ni created_at ya que SQLite no las tiene en OpenCode 1.17)
+    // Leer sesiones (esquema real de OpenCode 1.17)
     const sessionsRaw = execSync(
       `"${ocBin}" db --format json "SELECT id, title, model FROM session LIMIT 500"`,
       { encoding: 'utf8', timeout: 10000 }
     ).trim();
 
-    // Leer mensajes
+    // Leer mensajes usando esquema real: id, session_id, time_created, data (JSON blob)
     const messagesRaw = execSync(
-      `"${ocBin}" db --format json "SELECT id, session_id, role, content, model, created_at FROM message ORDER BY created_at DESC LIMIT 2000"`,
+      `"${ocBin}" db --format json "SELECT id, session_id, time_created, data FROM message ORDER BY time_created DESC LIMIT 2000"`,
       { encoding: 'utf8', timeout: 10000 }
     ).trim();
 
     const sessions = sessionsRaw ? JSON.parse(sessionsRaw) : [];
-    const messages = messagesRaw ? JSON.parse(messagesRaw) : [];
-    
-    // Asignar created_at artificial si no existe
-    sessions.forEach(s => { 
-      s.created_at = new Date().toISOString(); 
-      s.updated_at = s.created_at; 
+    const rawMessages = messagesRaw ? JSON.parse(messagesRaw) : [];
+
+    // Asignar timestamps artificiales a sesiones
+    sessions.forEach(s => {
+      s.created_at = new Date().toISOString();
+      s.updated_at = s.created_at;
     });
-    
+
+    // Extraer role y content del campo JSON 'data'
+    const messages = rawMessages.map(m => {
+      let dataObj = {};
+      try { dataObj = typeof m.data === 'string' ? JSON.parse(m.data) : (m.data || {}); } catch {}
+
+      // Extraer content: puede ser string o array de partes
+      let content = '';
+      if (dataObj.content) {
+        if (typeof dataObj.content === 'string') {
+          content = dataObj.content;
+        } else if (Array.isArray(dataObj.content)) {
+          content = dataObj.content
+            .filter(p => p && p.type === 'text')
+            .map(p => p.text || '')
+            .join('\n');
+        }
+      }
+
+      return {
+        id: m.id,
+        session_id: m.session_id,
+        role: dataObj.role || 'unknown',
+        content: content,
+        model: dataObj.modelID || null,
+        created_at: m.time_created ? new Date(Number(m.time_created)).toISOString() : new Date().toISOString(),
+      };
+    });
+
     return { sessions, messages };
   } catch (err) {
-    console.warn('[sync] ⚠ No se pudo leer SQLite:', err.message);
+    console.warn('[sync] \u26a0 No se pudo leer SQLite:', err.message);
     return { sessions: [], messages: [] };
   }
 }
