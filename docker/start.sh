@@ -90,5 +90,19 @@ echo "  🗄️  Historial API:  http://0.0.0.0:${SYNC_PORT}/api/sessions"
 echo "  🔍 Buscar:          http://0.0.0.0:${SYNC_PORT}/api/search?q=texto"
 echo "============================================================"
 
+# ---- Graceful Shutdown & Auto-Sync ---- #
+cleanup() {
+  echo ""
+  echo "🛑 Señal de apagado recibida. Sincronizando historial antes de salir..."
+  curl -s -X POST "http://localhost:${PROXY_PORT}/api/sync-now" || true
+  echo "✓ Sincronización final completada."
+  kill $OC_PID 2>/dev/null
+  kill $PROXY_PID 2>/dev/null
+  kill $SYNC_PID 2>/dev/null
+  exit 0
+}
+
+trap cleanup SIGINT SIGTERM
+
 # Mantener vivo — si OpenCode muere, el contenedor se reinicia
 wait $OC_PID
