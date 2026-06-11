@@ -261,6 +261,18 @@ customApi.post("/broadcast/open_url", express.json(), async (req, res) => {
   }
 });
 
+// ── Endpoint para disparar sincronización manual ────────────
+customApi.post("/sync-now", express.json(), async (req, res) => {
+  try {
+    const SYNC_PORT = process.env.SYNC_API_PORT || 21295;
+    const resp = await fetch(`http://localhost:${SYNC_PORT}/api/sync`, { method: 'POST' });
+    const data = await resp.json();
+    res.json({ ok: true, ...data });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.use("/api", customApi);
 
 // ── Dashboard de Mente Colmena ──────────────────────────────
