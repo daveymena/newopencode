@@ -56,7 +56,14 @@ opencode serve \
 OC_PID=$!
 echo "  ✓ Motor OpenCode PID=$OC_PID → puerto $OPENCODE_INTERNAL_PORT"
 
-# 2. Esperar que OpenCode levante (hasta 40s)
+# 2. Proxy web (puerto público)
+PORT=$PROXY_PORT \
+OPENCODE_INTERNAL_PORT=$OPENCODE_INTERNAL_PORT \
+  node /app/proxy.mjs &
+PROXY_PID=$!
+echo "  ✓ Proxy web PID=$PROXY_PID → puerto $PROXY_PORT"
+
+# 3. Esperar que OpenCode levante (hasta 40s)
 echo "  Esperando que OpenCode arranque..."
 for i in $(seq 1 20); do
   sleep 2
@@ -65,13 +72,6 @@ for i in $(seq 1 20); do
     break
   fi
 done
-
-# 3. Proxy web (puerto público)
-PORT=$PROXY_PORT \
-OPENCODE_INTERNAL_PORT=$OPENCODE_INTERNAL_PORT \
-  node /app/proxy.mjs &
-PROXY_PID=$!
-echo "  ✓ Proxy web PID=$PROXY_PID → puerto $PROXY_PORT"
 
 # 4. DB Sync (PostgreSQL)
 if [ -n "$DATABASE_URL" ]; then
