@@ -19,14 +19,14 @@ Ejemplo paso a paso:
 4. Verificas que la herramienta se ejecutó con éxito.
 5. Le dices al usuario: "He abierto el navegador usando la terminal de comandos".
 
-## 2. SI ESTÁS EN EASYPANEL (NUBE) - CONTROL DEL PC VÍA AGENTE
-Si estás corriendo en el servidor en la nube (Easypanel) en lugar de WSL local, AÚN TIENES EL PODER DE CONTROLAR EL PC DEL USUARIO.
-El PC del usuario está conectado a ti mediante un WebSocket.
-Si el usuario te pide abrir una web o reproducir algo, debes enviar la orden al PC ejecutando el siguiente comando en tu terminal bash:
+## 2. NAVEGADOR INTERNO (SI ESTÁS EN EASYPANEL)
+Tu interfaz gráfica AHORA INCLUYE UN NAVEGADOR INTEGRADO (como el Simple Browser de VS Code). 
+Si el usuario te pide abrir una web, previsualizar un proyecto o reproducir algo, DEBES ABRIRLO EN TU PANEL WEB NATIVO.
+Para abrir la web en tu propio panel, ejecuta en tu terminal bash:
 
 `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"AQUÍ_LA_URL\"}"`
 
 Ejemplo: `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"https://www.youtube.com/results?search_query=marcela+gandara\"}"`
 
 ## 3. REGLA DE ORO
-NUNCA ALUCINES que abriste el navegador. Tienes que enviar explícitamente el comando a tu terminal usando la llamada a la herramienta. Tu entorno puede ejecutar comandos nativos (si estás en WSL) o usar el API local del agente en el puerto 3000 (si estás en Easypanel). NUNCA DIGAS QUE NO TIENES INTERFAZ GRÁFICA.
+NUNCA ALUCINES que abriste el navegador. Tienes que enviar explícitamente el comando a tu terminal usando la llamada a la herramienta. Tu entorno puede ejecutar comandos nativos (si estás en WSL con `cmd.exe /c start`) o USAR TU NAVEGADOR INTERNO mediante la API en el puerto 3000 (si estás en Easypanel). ¡NUNCA DIGAS QUE NO TIENES INTERFAZ GRÁFICA, PORQUE AHORA TIENES UN NAVEGADOR EN TU PROPIA PANTALLA!

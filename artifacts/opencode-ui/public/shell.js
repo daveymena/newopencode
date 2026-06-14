@@ -348,14 +348,100 @@
     }
   }
 
-  // ── 4. Init ────────────────────────────────────────────────
-  function init() {
-    forceDark();
-    if (document.body) { injectHeader(); injectVisionButton(); }
-    else document.addEventListener("DOMContentLoaded", () => { injectHeader(); injectVisionButton(); });
+
+  // ── 7. Navegador Interno Integrado ───────────────────────
+  function initInternalBrowser() {
+    const panel = document.createElement("div");
+    panel.id = "oc-internal-browser-panel";
+    panel.innerHTML = `
+      <div class="oc-ib-header">
+        <div class="oc-ib-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+          Navegador
+        </div>
+        <div class="oc-ib-url" id="oc-ib-url-display">about:blank</div>
+        <div class="oc-ib-actions">
+          <button class="oc-ib-btn" id="oc-ib-btn-refresh" title="Recargar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 102.6-6.4L2 8"/></svg>
+          </button>
+          <button class="oc-ib-btn" id="oc-ib-btn-external" title="Abrir en pestaña externa">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </button>
+          <button class="oc-ib-btn" id="oc-ib-btn-close" title="Cerrar panel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <iframe id="oc-internal-iframe" src="about:blank" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
+    `;
+    document.body.appendChild(panel);
+
+    const iframe = document.getElementById("oc-internal-iframe");
+    const urlDisplay = document.getElementById("oc-ib-url-display");
+    const btnClose = document.getElementById("oc-ib-btn-close");
+    const btnRefresh = document.getElementById("oc-ib-btn-refresh");
+    const btnExternal = document.getElementById("oc-ib-btn-external");
+
+    btnClose.addEventListener("click", () => {
+      panel.classList.remove("open");
+      iframe.src = "about:blank";
+    });
+
+    btnRefresh.addEventListener("click", () => {
+      const currentSrc = iframe.src;
+      iframe.src = "about:blank";
+      setTimeout(() => { iframe.src = currentSrc; }, 50);
+    });
+
+    btnExternal.addEventListener("click", () => {
+      if (iframe.src && iframe.src !== "about:blank") {
+        window.open(iframe.src, "_blank");
+      }
+    });
+
+    // 2. Conectar por SSE al proxy para recibir comandos
+    const sse = new EventSource("/api/ui-events");
+    sse.onmessage = (e) => {
+      try {
+        if (e.event === "open_url" || e.data) {
+          const data = JSON.parse(e.data);
+          if (data.url) {
+            urlDisplay.textContent = data.url;
+            iframe.src = data.url;
+            panel.classList.add("open");
+          }
+        }
+      } catch (err) {
+        console.error("Error parseando evento SSE:", err);
+      }
+    };
+    sse.addEventListener("open_url", (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.url) {
+          urlDisplay.textContent = data.url;
+          iframe.src = data.url;
+          panel.classList.add("open");
+        }
+      } catch (err) {}
+    });
   }
 
-  init();
-  window.addEventListener("load", () => { forceDark(); injectHeader(); injectVisionButton(); });
+  // Inicializar todo
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      injectHeader();
+      injectVisionButton();
+      initInternalBrowser();
+    });
+  } else {
+    injectHeader();
+    injectVisionButton();
+    initInternalBrowser();
+  }
 
 })();

@@ -237,6 +237,34 @@ const apiProxy = createProxyMiddleware({
 // ── API para gestionar Agentes ────────────────────────────
 const customApi = express.Router();
 
+// ── UI Clients (SSE) ──────────────────────────────────────
+const uiClients = new Set();
+
+customApi.get("/ui-events", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  uiClients.add(res);
+
+  const pingInterval = setInterval(() => {
+    res.write(':\n\n');
+  }, 20000);
+
+  req.on("close", () => {
+    clearInterval(pingInterval);
+    uiClients.delete(res);
+  });
+});
+
+function broadcastToUI(eventType, data) {
+  const message = `event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of uiClients) {
+    client.write(message);
+  }
+}
+
 customApi.get("/agents", (req, res) => {
   const list = [...pcAgents.entries()].map(([id, a]) => ({ id, name: a.name, sysinfo: a.sysinfo, connectedAt: a.connectedAt }));
   res.json(list);
@@ -254,8 +282,13 @@ customApi.post("/agents/:id", express.json(), async (req, res) => {
 customApi.post("/broadcast/open_url", express.json(), async (req, res) => {
   try {
     const { url: targetUrl } = req.body;
+    
+    // Broadcast to internal UI browser
+    broadcastToUI("open_url", { url: targetUrl });
+
+    // Broadcast to external PC agents
     const results = await Promise.allSettled([...pcAgents.keys()].map(id => sendToAgent(id, { type: "open_url", url: targetUrl }, 10000)));
-    res.json({ agents: pcAgents.size, results: results.map(r => r.status) });
+    res.json({ agents: pcAgents.size, uiClients: uiClients.size, results: results.map(r => r.status) });
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
@@ -354,9 +387,13 @@ call npm install ws --no-save >nul 2>&1
 
 echo Conectando a la colmena...
 set AGENT_SERVER_URL=${wssUrl}
-node pc-agent.mjs
 
-pause
+:loop
+node pc-agent.mjs
+echo.
+echo [AGENT] El agente se ha cerrado. Reiniciando automaticamente en 3 segundos para mantener la conexion estable...
+timeout /t 3
+goto loop
 `;
 
   res.setHeader('Content-disposition', 'attachment; filename=INSTALAR-AGENTE.bat');

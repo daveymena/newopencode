@@ -639,3 +639,93 @@ pre, code {
   text-overflow: ellipsis;
   max-width: 300px;
 }
+
+/* ── Navegador Interno ── */
+#oc-internal-browser-panel {
+  position: fixed;
+  top: 0;
+  right: -50vw;
+  width: 50vw;
+  height: 100vh;
+  background: rgba(10, 10, 20, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#oc-internal-browser-panel.open {
+  right: 0;
+}
+
+.oc-ib-header {
+  height: 48px;
+  background: rgba(20, 20, 30, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+}
+
+.oc-ib-title {
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.oc-ib-url {
+  flex-grow: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 4px 10px;
+  color: #a0a0c8;
+  font-family: monospace;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oc-ib-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.oc-ib-btn {
+  background: transparent;
+  border: none;
+  color: #a0a0c8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oc-ib-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.oc-ib-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+#oc-internal-iframe {
+  flex-grow: 1;
+  width: 100%;
+  border: none;
+  background: #fff;
+}
