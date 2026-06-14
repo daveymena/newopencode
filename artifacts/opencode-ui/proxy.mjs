@@ -36,6 +36,25 @@ const app = express();
 // ── Static shell files (CSS + JS personalizado) ──────────────
 app.use("/__shell", express.static(path.join(__dirname, "public")));
 
+// ── Túnel de Puertos de Desarrollo (Dev Port Tunnel) ──────
+const devPortProxy = createProxyMiddleware({
+  router: (req) => {
+    const match = req.url.match(/^\/port\/(\d+)/);
+    if (match) {
+      return `http://127.0.0.1:${match[1]}`;
+    }
+    return null;
+  },
+  pathRewrite: (path, req) => {
+    const match = path.match(/^\/port\/\d+(.*)/);
+    return match && match[1] !== "" ? match[1] : "/";
+  },
+  changeOrigin: true,
+  ws: true,
+  logLevel: 'silent'
+});
+app.use("/port", devPortProxy);
+
 // ═══════════════════════════════════════════════════════════════
 // ENDPOINT: /vision — Convierte imagen → texto descriptivo
 // Permite que CUALQUIER modelo (Llama, Groq, Mistral, etc.)

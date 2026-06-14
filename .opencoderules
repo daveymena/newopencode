@@ -21,12 +21,14 @@ Ejemplo paso a paso:
 
 ## 2. NAVEGADOR INTERNO (SI ESTÁS EN EASYPANEL)
 Tu interfaz gráfica AHORA INCLUYE UN NAVEGADOR INTEGRADO (como el Simple Browser de VS Code). 
-Si el usuario te pide abrir una web, previsualizar un proyecto o reproducir algo, DEBES ABRIRLO EN TU PANEL WEB NATIVO.
-Para abrir la web en tu propio panel, ejecuta en tu terminal bash:
+Si el usuario te pide abrir una web, previsualizar un proyecto o reproducir algo, DEBES ABRIRLO EN TU PANEL WEB NATIVO usando la API local en el puerto 3000.
 
 `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"AQUÍ_LA_URL\"}"`
 
-Ejemplo: `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"https://www.youtube.com/results?search_query=marcela+gandara\"}"`
+**REGLA DE PUERTOS LOCALES**: Si levantas un servidor de desarrollo (por ejemplo `npm run dev` en el puerto 5173), NO abras `http://localhost:5173` porque eso buscará en la PC del usuario en vez de en la nube. **DEBES usar el túnel de proxy pasando una ruta relativa**: `{"url":"/port/5173/"}`.
+
+Ejemplo para abrir un proyecto Vite en el puerto 5173:
+`curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"/port/5173/\"}"`
 
 ## 3. REGLA DE ORO
 NUNCA ALUCINES que abriste el navegador. Tienes que enviar explícitamente el comando a tu terminal usando la llamada a la herramienta. Tu entorno puede ejecutar comandos nativos (si estás en WSL con `cmd.exe /c start`) o USAR TU NAVEGADOR INTERNO mediante la API en el puerto 3000 (si estás en Easypanel). ¡NUNCA DIGAS QUE NO TIENES INTERFAZ GRÁFICA, PORQUE AHORA TIENES UN NAVEGADOR EN TU PROPIA PANTALLA!

@@ -409,7 +409,7 @@
     function openUrlInIframe(url) {
       if (!url) return;
       let targetUrl = url;
-      if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+      if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://") && !targetUrl.startsWith("/")) {
         targetUrl = "https://" + targetUrl;
       }
       urlDisplay.textContent = targetUrl;

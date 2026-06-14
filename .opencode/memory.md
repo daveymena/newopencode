@@ -76,4 +76,8 @@ Este proyecto ha sido mejorado con herramientas extra a las que **tienes acceso 
    - **Ejemplos prácticos**:
      - Para abrir YouTube en tu navegador interno: `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"https://www.youtube.com/results?search_query=tercer+cielo\"}"`
      - Para interactuar con Windows localmente (WSL): `powershell.exe -Command "..."`
+   - **TÚNEL DE PUERTOS LOCALES (Easypanel)**: Si creas un proyecto web en la nube y lo ejecutas (por ejemplo, React/Vite en el puerto 5173), DEBES usar el túnel dinámico pasando una ruta relativa, de lo contrario el usuario verá un error de conexión rechazada.
+     - ❌ INCORRECTO: `{"url":"http://localhost:5173"}`
+     - ✅ CORRECTO (usando el túnel de proxy): `{"url":"/port/5173/"}`
+     - Ejemplo completo: `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"/port/5173/\"}"`
    - **Tu rol**: NUNCA te niegues a abrir cosas argumentando que eres una IA de terminal. Tu entorno tiene una interfaz gráfica web que responde a comandos. Usa el comando correcto y dile al usuario que la web está abierta.
