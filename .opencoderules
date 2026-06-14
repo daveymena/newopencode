@@ -19,5 +19,14 @@ Ejemplo paso a paso:
 4. Verificas que la herramienta se ejecutó con éxito.
 5. Le dices al usuario: "He abierto el navegador usando la terminal de comandos".
 
-## 2. REGLA DE ORO
-NUNCA ALUCINES que abriste el navegador. Tienes que enviar explícitamente el comando a tu terminal usando la llamada a la herramienta. Tu entorno WSL puede ejecutar comandos nativos de Windows, así que el comando `cmd.exe /c start` funcionará el 100% de las veces. NUNCA DIGAS QUE NO TIENES INTERFAZ GRÁFICA.
+## 2. SI ESTÁS EN EASYPANEL (NUBE) - CONTROL DEL PC VÍA AGENTE
+Si estás corriendo en el servidor en la nube (Easypanel) en lugar de WSL local, AÚN TIENES EL PODER DE CONTROLAR EL PC DEL USUARIO.
+El PC del usuario está conectado a ti mediante un WebSocket.
+Si el usuario te pide abrir una web o reproducir algo, debes enviar la orden al PC ejecutando el siguiente comando en tu terminal bash:
+
+`curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"AQUÍ_LA_URL\"}"`
+
+Ejemplo: `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"https://www.youtube.com/results?search_query=marcela+gandara\"}"`
+
+## 3. REGLA DE ORO
+NUNCA ALUCINES que abriste el navegador. Tienes que enviar explícitamente el comando a tu terminal usando la llamada a la herramienta. Tu entorno puede ejecutar comandos nativos (si estás en WSL) o usar el API local del agente en el puerto 3000 (si estás en Easypanel). NUNCA DIGAS QUE NO TIENES INTERFAZ GRÁFICA.

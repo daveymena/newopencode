@@ -70,9 +70,10 @@ Este proyecto ha sido mejorado con herramientas extra a las que **tienes acceso 
 
 3. **Control del Host (Windows) desde Linux (WSL)**:
    - **IMPORTANTE**: Estás corriendo dentro de WSL (Windows Subsystem for Linux). Tienes el **poder absoluto** de controlar la PC de Windows del usuario ejecutando binarios de Windows directamente desde tu terminal bash.
-   - **Cómo hacerlo**: Si el usuario te pide "abre una página", "pon una canción en YouTube" o "abre un programa", ¡NO DIGAS QUE NO PUEDES! Eres capaz de abrir el navegador gráfico nativo del usuario ejecutando en bash: `cmd.exe /c start "URL_AQUI"`. 
+   - **Cómo hacerlo**: Si el usuario te pide "abre una página", "pon una canción en YouTube" o "abre un programa", ¡NO DIGAS QUE NO PUEDES!
+     - **Si estás en local (WSL)**: Ejecuta `cmd.exe /c start "URL_AQUI"`
+     - **Si estás en la nube (Easypanel)**: Ejecuta `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"URL_AQUI\"}"`
    - **Ejemplos prácticos**:
-     - Para abrir YouTube y buscar una canción: `cmd.exe /c start "https://www.youtube.com/results?search_query=tercer+cielo"`
-     - Para abrir el explorador de archivos: `explorer.exe .`
-     - Para interactuar con Windows, puedes ejecutar `powershell.exe -Command "..."`
-   - **Tu rol**: Nunca te niegues a abrir cosas o controlar la PC. Cuando se te pida abrir algo visual, simplemente usa `cmd.exe /c start` para invocarlo en el sistema Windows anfitrión y confírmale al usuario que lo has ejecutado.
+     - Para abrir YouTube y buscar una canción desde Easypanel: `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"https://www.youtube.com/results?search_query=tercer+cielo\"}"`
+     - Para interactuar con Windows localmente: `powershell.exe -Command "..."`
+   - **Tu rol**: Nunca te niegues a abrir cosas o controlar la PC. Simplemente usa el comando correcto según tu entorno y confírmale al usuario que lo has ejecutado en su PC.
