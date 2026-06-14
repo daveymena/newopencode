@@ -38,15 +38,18 @@ app.use("/__shell", express.static(path.join(__dirname, "public")));
 
 // ── Túnel de Puertos de Desarrollo (Dev Port Tunnel) ──────
 const devPortProxy = createProxyMiddleware({
+  target: 'http://127.0.0.1:80', // Fallback seguro para evitar crash si router falla
   router: (req) => {
-    const match = req.url.match(/^\/port\/(\d+)/);
+    // Cuando usamos app.use('/port', ...), req.originalUrl contiene '/port/5173'
+    const match = req.originalUrl.match(/^\/port\/(\d+)/);
     if (match) {
       return `http://127.0.0.1:${match[1]}`;
     }
     return null;
   },
   pathRewrite: (path, req) => {
-    const match = path.match(/^\/port\/\d+(.*)/);
+    // pathRewrite recibe la URL original cuando se usa router dinámico en v3
+    const match = req.originalUrl.match(/^\/port\/\d+(.*)/);
     return match && match[1] !== "" ? match[1] : "/";
   },
   changeOrigin: true,

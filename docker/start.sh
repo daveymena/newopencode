@@ -22,8 +22,11 @@ if [ -d "/app-defaults" ]; then
     cp /app-defaults/.opencoderules /workspace/.opencoderules
     echo "   ✓ Reglas (.opencoderules) restauradas en el volumen"
   fi
-  if [ ! -f "/workspace/.opencode/memory.md" ] && [ -f "/app-defaults/.opencode/memory.md" ]; then
+  if [ ! -d "/workspace/.opencode" ] || [ -z "$(ls -A /workspace/.opencode 2>/dev/null)" ]; then
     mkdir -p /workspace/.opencode
+    cp -r /app-defaults/.opencode/* /workspace/.opencode/ 2>/dev/null || true
+    echo "   ✓ Carpeta .opencode (reglas, tokens, settings) restaurada en el volumen"
+  elif [ ! -f "/workspace/.opencode/memory.md" ] && [ -f "/app-defaults/.opencode/memory.md" ]; then
     cp /app-defaults/.opencode/memory.md /workspace/.opencode/memory.md
     echo "   ✓ Memoria (.opencode/memory.md) restaurada en el volumen"
   fi
