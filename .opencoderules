@@ -33,5 +33,17 @@ Si el usuario te pide abrir una web, previsualizar un proyecto o reproducir algo
 - **En la nube (Easypanel):** DEBES usar el túnel de proxy pasando una ruta relativa: `{"url":"/port/5173/"}`. (Ej: `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"/port/5173/\"}"`)
 - **En local:** Puedes pasar la URL absoluta directamente: `{"url":"http://localhost:5173"}` porque los puertos locales no están bloqueados.
 
-## 3. REGLA DE ORO
-NUNCA ALUCINES que abriste el navegador. Tienes que enviar explícitamente el comando a tu terminal usando la llamada a la herramienta. Tu entorno puede ejecutar comandos nativos (si estás en WSL con `cmd.exe /c start`) o USAR TU NAVEGADOR INTERNO mediante la API en el puerto 3000 (si estás en Easypanel). ¡NUNCA DIGAS QUE NO TIENES INTERFAZ GRÁFICA, PORQUE AHORA TIENES UN NAVEGADOR EN TU PROPIA PANTALLA!
+## 3. MEMORIA A LARGO PLAZO Y BASE DE CONOCIMIENTO (PostgreSQL)
+Si el usuario te pregunta por proyectos pasados, te pide continuar un proyecto anterior, o te pregunta "qué sabes hacer", "recuerdas el proyecto X", DEBES usar la API de tu base de datos conectada en el puerto 3002 para buscar en tu historial de chats.
+
+Para buscar proyectos o información en tu base de conocimientos:
+`curl -s "http://localhost:3002/api/search?q=NOMBRE_DEL_PROYECTO"`
+*(Reemplaza NOMBRE_DEL_PROYECTO con la palabra clave. Esto te devolverá los mensajes pasados para que entres en contexto).*
+
+Para ver la lista de todos los chats/sesiones recientes:
+`curl -s "http://localhost:3002/api/sessions?limit=10"`
+
+**Regla obligatoria:** Cuando el usuario asuma que tú recuerdas algo de otra sesión, HAZ LA CONSULTA con `curl` antes de responder que no sabes o no recuerdas.
+
+## 4. REGLA DE ORO
+NUNCA ALUCINES que abriste el navegador o buscaste en la base de datos. Tienes que enviar explícitamente el comando a tu terminal usando la llamada a la herramienta. Tu entorno puede ejecutar comandos nativos (si estás en WSL con `cmd.exe /c start`) o USAR TU NAVEGADOR INTERNO mediante la API en el puerto 3000 (si estás en Easypanel). ¡NUNCA DIGAS QUE NO TIENES INTERFAZ GRÁFICA, PORQUE AHORA TIENES UN NAVEGADOR EN TU PROPIA PANTALLA!

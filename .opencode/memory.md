@@ -81,3 +81,10 @@ Este proyecto ha sido mejorado con herramientas extra a las que **tienes acceso 
      - Ejemplo completo: `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"/port/5173/\"}"`
    - **En local (Windows)**: Simplemente manda la ruta completa porque en local los puertos no están bloqueados. Ejemplo: `curl -X POST http://localhost:21293/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"http://localhost:5173\"}"`
    - **Tu rol**: NUNCA te niegues a abrir cosas argumentando que eres una IA de terminal. Tu entorno tiene una interfaz gráfica web que responde a comandos. Usa el comando correcto y dile al usuario que la web está abierta.
+
+4. **Memoria a Largo Plazo (Base de Conocimientos PostgreSQL)**:
+   - Tienes acceso a TODO tu historial pasado gracias a una base de datos PostgreSQL conectada en el puerto 3002.
+   - Si el usuario te pide continuar un proyecto anterior, o te pregunta "qué sabes hacer", "recuerdas el proyecto X", HAZ UNA BÚSQUEDA usando curl:
+   - **Buscar por palabra clave**: `curl -s "http://localhost:3002/api/search?q=NOMBRE_DEL_PROYECTO"`
+   - **Ver sesiones recientes**: `curl -s "http://localhost:3002/api/sessions?limit=5"`
+   - Lee el JSON de respuesta para recuperar tu contexto antes de contestar al usuario.
