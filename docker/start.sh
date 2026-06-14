@@ -16,6 +16,19 @@ if [ -f "/workspace/.env" ]; then
   set +o allexport
 fi
 
+# ---- Restaurar configuraciones si el volumen fue borrado ---- #
+if [ -d "/app-defaults" ]; then
+  if [ ! -f "/workspace/.opencoderules" ] && [ -f "/app-defaults/.opencoderules" ]; then
+    cp /app-defaults/.opencoderules /workspace/.opencoderules
+    echo "   ✓ Reglas (.opencoderules) restauradas en el volumen"
+  fi
+  if [ ! -f "/workspace/.opencode/memory.md" ] && [ -f "/app-defaults/.opencode/memory.md" ]; then
+    mkdir -p /workspace/.opencode
+    cp /app-defaults/.opencode/memory.md /workspace/.opencode/memory.md
+    echo "   ✓ Memoria (.opencode/memory.md) restaurada en el volumen"
+  fi
+fi
+
 # ---- Mostrar proveedores configurados ---- #
 [ -n "$ANTHROPIC_API_KEY" ]             && echo "   ✅ Anthropic Claude"
 [ -n "$OPENAI_API_KEY" ]               && echo "   ✅ OpenAI GPT"

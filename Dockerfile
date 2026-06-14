@@ -141,6 +141,11 @@ COPY .config/opencode/ /root/.config/opencode/
 COPY .opencode/ /workspace/.opencode/
 COPY .env.example /workspace/.env.example
 
+# Guardar respaldos por si se borra el volumen
+RUN mkdir -p /app-defaults/.opencode
+COPY .opencoderules /app-defaults/.opencoderules
+COPY .opencode/ /app-defaults/.opencode/
+
 # Crear estructura de directorios
 RUN mkdir -p \
     /workspace/proyectos \
