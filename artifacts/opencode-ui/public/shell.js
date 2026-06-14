@@ -405,15 +405,23 @@
 
     // 2. Conectar por SSE al proxy para recibir comandos
     const sse = new EventSource("/api/ui-events");
+
+    function openUrlInIframe(url) {
+      if (!url) return;
+      let targetUrl = url;
+      if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+        targetUrl = "https://" + targetUrl;
+      }
+      urlDisplay.textContent = targetUrl;
+      iframe.src = targetUrl;
+      panel.classList.add("open");
+    }
+
     sse.onmessage = (e) => {
       try {
         if (e.event === "open_url" || e.data) {
           const data = JSON.parse(e.data);
-          if (data.url) {
-            urlDisplay.textContent = data.url;
-            iframe.src = data.url;
-            panel.classList.add("open");
-          }
+          openUrlInIframe(data.url);
         }
       } catch (err) {
         console.error("Error parseando evento SSE:", err);
@@ -422,11 +430,7 @@
     sse.addEventListener("open_url", (e) => {
       try {
         const data = JSON.parse(e.data);
-        if (data.url) {
-          urlDisplay.textContent = data.url;
-          iframe.src = data.url;
-          panel.classList.add("open");
-        }
+        openUrlInIframe(data.url);
       } catch (err) {}
     });
   }
