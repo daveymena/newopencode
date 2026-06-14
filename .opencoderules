@@ -19,16 +19,19 @@ Ejemplo paso a paso:
 4. Verificas que la herramienta se ejecutó con éxito.
 5. Le dices al usuario: "He abierto el navegador usando la terminal de comandos".
 
-## 2. NAVEGADOR INTERNO (SI ESTÁS EN EASYPANEL)
+## 2. NAVEGADOR INTERNO
 Tu interfaz gráfica AHORA INCLUYE UN NAVEGADOR INTEGRADO (como el Simple Browser de VS Code). 
-Si el usuario te pide abrir una web, previsualizar un proyecto o reproducir algo, DEBES ABRIRLO EN TU PANEL WEB NATIVO usando la API local en el puerto 3000.
+Si el usuario te pide abrir una web, previsualizar un proyecto o reproducir algo, DEBES ABRIRLO EN TU PANEL WEB NATIVO usando la API local correspondiente a tu entorno:
 
+- **En la nube (Easypanel):** Usa el puerto 3000
 `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"AQUÍ_LA_URL\"}"`
 
-**REGLA DE PUERTOS LOCALES**: Si levantas un servidor de desarrollo (por ejemplo `npm run dev` en el puerto 5173), NO abras `http://localhost:5173` porque eso buscará en la PC del usuario en vez de en la nube. **DEBES usar el túnel de proxy pasando una ruta relativa**: `{"url":"/port/5173/"}`.
+- **En local (Windows/WSL):** Usa el puerto 21293
+`curl -X POST http://localhost:21293/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"AQUÍ_LA_URL\"}"`
 
-Ejemplo para abrir un proyecto Vite en el puerto 5173:
-`curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"/port/5173/\"}"`
+**REGLA DE PUERTOS (Servidores de desarrollo como Vite/React):** 
+- **En la nube (Easypanel):** DEBES usar el túnel de proxy pasando una ruta relativa: `{"url":"/port/5173/"}`. (Ej: `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"/port/5173/\"}"`)
+- **En local:** Puedes pasar la URL absoluta directamente: `{"url":"http://localhost:5173"}` porque los puertos locales no están bloqueados.
 
 ## 3. REGLA DE ORO
 NUNCA ALUCINES que abriste el navegador. Tienes que enviar explícitamente el comando a tu terminal usando la llamada a la herramienta. Tu entorno puede ejecutar comandos nativos (si estás en WSL con `cmd.exe /c start`) o USAR TU NAVEGADOR INTERNO mediante la API en el puerto 3000 (si estás en Easypanel). ¡NUNCA DIGAS QUE NO TIENES INTERFAZ GRÁFICA, PORQUE AHORA TIENES UN NAVEGADOR EN TU PROPIA PANTALLA!

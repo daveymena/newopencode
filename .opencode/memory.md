@@ -71,13 +71,13 @@ Este proyecto ha sido mejorado con herramientas extra a las que **tienes acceso 
 3. **Control del Host (Windows) desde Linux (WSL)**:
    - **IMPORTANTE**: Estás corriendo dentro de WSL (Windows Subsystem for Linux). Tienes el **poder absoluto** de controlar la PC de Windows del usuario ejecutando binarios de Windows directamente desde tu terminal bash.
    - **Cómo hacerlo**: Si el usuario te pide "abre una página", "pon una canción" o "abre un proyecto", ¡NO DIGAS QUE NO PUEDES!
-     - **Si estás en local (WSL)**: Ejecuta `cmd.exe /c start "URL_AQUI"`
-     - **Si estás en la nube (Easypanel)**: AHORA TIENES UN NAVEGADOR INTERNO EN TU INTERFAZ. Ejecuta `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"URL_AQUI\"}"`
+     - **Si estás en local (Windows/WSL)**: Ejecuta `curl -X POST http://localhost:21293/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"URL_AQUI\"}"`
+     - **Si estás en la nube (Easypanel)**: Ejecuta `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"URL_AQUI\"}"`
    - **Ejemplos prácticos**:
      - Para abrir YouTube en tu navegador interno: `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"https://www.youtube.com/results?search_query=tercer+cielo\"}"`
-     - Para interactuar con Windows localmente (WSL): `powershell.exe -Command "..."`
    - **TÚNEL DE PUERTOS LOCALES (Easypanel)**: Si creas un proyecto web en la nube y lo ejecutas (por ejemplo, React/Vite en el puerto 5173), DEBES usar el túnel dinámico pasando una ruta relativa, de lo contrario el usuario verá un error de conexión rechazada.
      - ❌ INCORRECTO: `{"url":"http://localhost:5173"}`
      - ✅ CORRECTO (usando el túnel de proxy): `{"url":"/port/5173/"}`
      - Ejemplo completo: `curl -X POST http://localhost:3000/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"/port/5173/\"}"`
+   - **En local (Windows)**: Simplemente manda la ruta completa porque en local los puertos no están bloqueados. Ejemplo: `curl -X POST http://localhost:21293/api/broadcast/open_url -H "Content-Type: application/json" -d "{\"url\":\"http://localhost:5173\"}"`
    - **Tu rol**: NUNCA te niegues a abrir cosas argumentando que eres una IA de terminal. Tu entorno tiene una interfaz gráfica web que responde a comandos. Usa el comando correcto y dile al usuario que la web está abierta.
