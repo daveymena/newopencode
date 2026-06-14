@@ -16,6 +16,26 @@ if [ -f "/workspace/.env" ]; then
   set +o allexport
 fi
 
+# ---- RESET DE TOKENS: Borrar identidad para renovar tokens gratuitos ---- #
+echo "   🔄 Reseteando identidad de OpenCode (tokens gratuitos)..."
+
+# Borrar state/cache del usuario (aquí OpenCode guarda quién eres)
+rm -rf /root/.local/share/opencode/* 2>/dev/null || true
+rm -rf /root/.cache/opencode/* 2>/dev/null || true
+
+# Borrar settings.json (rastreador de sesión) pero conservar memoria y reglas
+if [ -d "/workspace/.opencode" ]; then
+  rm -f /workspace/.opencode/settings.json 2>/dev/null || true
+  rm -f /workspace/.opencode/bun.lock 2>/dev/null || true
+  rm -f /workspace/.opencode/package-lock.json 2>/dev/null || true
+  rm -rf /workspace/.opencode/node_modules 2>/dev/null || true
+  echo "   ✓ Identidad borrada — tokens gratuitos renovados"
+fi
+
+# Borrar config global (se regenera limpia al arrancar)
+rm -rf /root/.config/opencode/sessions* 2>/dev/null || true
+rm -f /root/.config/opencode/state.json 2>/dev/null || true
+
 # ---- Restaurar configuraciones si el volumen fue borrado ---- #
 if [ -d "/app-defaults" ]; then
   if [ ! -f "/workspace/.opencoderules" ] && [ -f "/app-defaults/.opencoderules" ]; then
