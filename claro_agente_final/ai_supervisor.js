@@ -5,7 +5,7 @@ try {
 } catch (e) {}
 
 const OLLAMA_ENDPOINT = "http://localhost:11434/api/generate";
-const VISION_MODEL = "moondream:latest";
+const VISION_MODEL = "qwen3-vl:235b-cloud";
 const REASON_MODEL = "gemma4:e2b-it-q4_K_M";
 const FAST_MODEL = "llama-free:latest";
 
