@@ -22,9 +22,9 @@ Debes leer la sección **"Closure Notes"** o **"Notas del Asesor"** para deducir
 
 *REGLAS DE MATERIALES (Aplica Material = "Si"):*
 - **"Cambio de cable"**: Si la nota dice que se cambió el cable, lo más probable es que sea el **Patch cord de fibra (Pigtail)**. NO pongas Fibra Drop a menos que lo diga explícitamente.
-- **"Cambio de fibra óptica"**: Si dice esto, entonces SÍ pon metros de **Fibra Drop** (ej. 15-30 metros) y tensores.
+- **"Cambio de fibra óptica"**: Si dice esto, entonces SÍ pon **Fibra Drop**. ¡OJO! La fibra no se mide por metros sino por unidad, así que debes poner siempre **1** (ej. `"fibra_drop": "1"`). También puedes agregar 1 o 2 tensores.
 - **"Cambio de ONT"**: Por lo general, al cambiar la ONT se cambian los **conectores mecánicos**. Pon 1 o 2 conectores.
-- **Variación Natural:** Siempre varía un poco las cantidades (un día 15 metros, otro día 18; un día 2 conectores, otro día 3) para que no parezca que siempre se pone exactamente lo mismo.
+- **Variación Natural:** Siempre varía un poco las cantidades de los conectores o tensores para que no parezca que siempre se pone exactamente lo mismo. (Recuerda, la fibra siempre es 1).
 - **Trabajos de Software:** Si las notas dicen "configuración remota", "reinicio", o fue algo de software sin cambio físico, pon `"aplicaMaterial": "No"`.
 
 ### 3. REGLA ESTRICTA DE DISPOSITIVOS Y SERIALES (DETENER EL SISTEMA)
