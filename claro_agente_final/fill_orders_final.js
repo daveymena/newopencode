@@ -284,6 +284,9 @@ function matchField(fieldTitle, order) {
 }
 
 async function fillFieldsByVision(page, order, isTest) {
+  if (!page._serialOntFilled) page._serialOntFilled = false;
+  if (!page._serialDecoFilled) page._serialDecoFilled = false;
+
   const fields = await getFields(page);
   if (isTest) {
     console.log("  📋 CAMPOS en esta pagina:");
@@ -346,11 +349,19 @@ async function fillFieldsByVision(page, order, isTest) {
       // Búsqueda específica de Seriales (ONT/Deco)
       const rawLower = f.rawTitle.toLowerCase();
       if (rawLower.includes("serial") || rawLower.includes("mac") || rawLower.includes("deco") || rawLower.includes("ont")) {
-        if (order.serial_ont && (rawLower.includes("ont") || rawLower.includes("serial"))) {
-          if (await fillText(page, f.idx, order.serial_ont)) { filled++; continue; }
+        if (order.serial_ont && !page._serialOntFilled && (rawLower.includes("ont") || rawLower.includes("serial"))) {
+          if (await fillText(page, f.idx, order.serial_ont)) { 
+            filled++; 
+            page._serialOntFilled = true;
+            continue; 
+          }
         }
-        if (order.serial_deco && (rawLower.includes("deco") || rawLower.includes("mac") || rawLower.includes("serial"))) {
-          if (await fillText(page, f.idx, order.serial_deco)) { filled++; continue; }
+        if (order.serial_deco && !page._serialDecoFilled && (rawLower.includes("deco") || rawLower.includes("mac") || rawLower.includes("serial"))) {
+          if (await fillText(page, f.idx, order.serial_deco)) { 
+            filled++; 
+            page._serialDecoFilled = true;
+            continue; 
+          }
         }
       }
 
@@ -448,6 +459,9 @@ async function getPageState(page) {
 }
 
 async function processOrder(browser, page, order, idx, isTest) {
+  page._serialOntFilled = false;
+  page._serialDecoFilled = false;
+
   const logMsg = `\n[${idx + 1}/30] OT ${order.ot} | ${order.ciudad} | Mat: ${order.aplicaMaterial} | Tipo: ${order.tipo_trabajo || 'N/A'} | Seriales: ${order.serial_ont||'N/A'}, ${order.serial_deco||'N/A'}`;
   console.log(logMsg);
   fs.appendFileSync(path.join(__dirname, "reporte_diario.txt"), logMsg + "\n");
