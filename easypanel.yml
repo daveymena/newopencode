@@ -18,6 +18,7 @@ services:
       # Puerto
       PORT: "3000"
       OPENCODE_WORKSPACE: /workspace
+      OPENCODE_SERVER_PASSWORD: "6715320Dvd."
 
       # ---- GRATUITOS (solo registro) ----
       # Groq → https://console.groq.com/keys
