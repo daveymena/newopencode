@@ -156,11 +156,18 @@ async function syncToPostgres() {
 
     // Upsert mensajes
     for (const m of messages) {
-      await client.query(`
-        INSERT INTO opencode_messages (id, session_id, role, content, model, created_at, synced_at)
-        VALUES ($1, $2, $3, $4, $5, $6, NOW())
-        ON CONFLICT (id) DO NOTHING
-      `, [m.id, m.session_id, m.role, m.content, m.model, m.created_at]);
+      try {
+        await client.query(`
+          INSERT INTO opencode_messages (id, session_id, role, content, model, created_at, synced_at)
+          VALUES ($1, $2, $3, $4, $5, $6, NOW())
+          ON CONFLICT (id) DO NOTHING
+        `, [m.id, m.session_id, m.role, m.content, m.model, m.created_at]);
+      } catch (err) {
+        // Ignore foreign key violations (orphan messages from limited session queries)
+        if (err.code !== '23503') {
+          console.warn(`[sync] Warning inserting message ${m.id}:`, err.message);
+        }
+      }
     }
 
     // Guardar estadísticas
