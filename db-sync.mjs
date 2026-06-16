@@ -17,6 +17,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATABASE_URL = process.env.DATABASE_URL ||
   'postgres://postgres:6715320@35.254.218.190:5433/davey?sslmode=disable';
 
+const PREFIX = process.env.DB_PREFIX || '';
 const pool = new Pool({ connectionString: DATABASE_URL });
 
 // ── Ruta a la BD SQLite de OpenCode ─────────────────────────
@@ -33,7 +34,7 @@ async function initDatabase() {
   const client = await pool.connect();
   try {
     await client.query(`
-      CREATE TABLE IF NOT EXISTS opencode_sessions (
+      CREATE TABLE IF NOT EXISTS \opencode_sessions (
         id          TEXT PRIMARY KEY,
         title       TEXT,
         created_at  TIMESTAMPTZ,
@@ -42,9 +43,9 @@ async function initDatabase() {
         synced_at   TIMESTAMPTZ DEFAULT NOW()
       );
 
-      CREATE TABLE IF NOT EXISTS opencode_messages (
+      CREATE TABLE IF NOT EXISTS \opencode_messages (
         id          TEXT PRIMARY KEY,
-        session_id  TEXT REFERENCES opencode_sessions(id) ON DELETE CASCADE,
+        session_id  TEXT REFERENCES \opencode_sessions(id) ON DELETE CASCADE,
         role        TEXT,
         content     TEXT,
         model       TEXT,
@@ -52,7 +53,7 @@ async function initDatabase() {
         synced_at   TIMESTAMPTZ DEFAULT NOW()
       );
 
-      CREATE TABLE IF NOT EXISTS opencode_stats (
+      CREATE TABLE IF NOT EXISTS \opencode_stats (
         id              SERIAL PRIMARY KEY,
         recorded_at     TIMESTAMPTZ DEFAULT NOW(),
         total_sessions  INT,
@@ -60,9 +61,9 @@ async function initDatabase() {
         models_used     JSONB
       );
 
-      CREATE INDEX IF NOT EXISTS idx_messages_session ON opencode_messages(session_id);
-      CREATE INDEX IF NOT EXISTS idx_messages_created ON opencode_messages(created_at DESC);
-      CREATE INDEX IF NOT EXISTS idx_sessions_updated ON opencode_sessions(updated_at DESC);
+      CREATE INDEX IF NOT EXISTS \idx_messages_session ON \opencode_messages(session_id);
+      CREATE INDEX IF NOT EXISTS \idx_messages_created ON \opencode_messages(created_at DESC);
+      CREATE INDEX IF NOT EXISTS \idx_sessions_updated ON \opencode_sessions(updated_at DESC);
     `);
     console.log('[sync] ✓ Tablas PostgreSQL verificadas/creadas');
   } finally {
@@ -144,7 +145,7 @@ async function syncToPostgres() {
     // Upsert sesiones
     for (const s of sessions) {
       await client.query(`
-        INSERT INTO opencode_sessions (id, title, created_at, updated_at, model, synced_at)
+        INSERT INTO \opencode_sessions (id, title, created_at, updated_at, model, synced_at)
         VALUES ($1, $2, $3, $4, $5, NOW())
         ON CONFLICT (id) DO UPDATE SET
           title = EXCLUDED.title,
@@ -158,7 +159,7 @@ async function syncToPostgres() {
     for (const m of messages) {
       try {
         await client.query(`
-          INSERT INTO opencode_messages (id, session_id, role, content, model, created_at, synced_at)
+          INSERT INTO \opencode_messages (id, session_id, role, content, model, created_at, synced_at)
           VALUES ($1, $2, $3, $4, $5, $6, NOW())
           ON CONFLICT (id) DO NOTHING
         `, [m.id, m.session_id, m.role, m.content, m.model, m.created_at]);
@@ -177,7 +178,7 @@ async function syncToPostgres() {
     }, {});
 
     await client.query(`
-      INSERT INTO opencode_stats (total_sessions, total_messages, models_used)
+      INSERT INTO \opencode_stats (total_sessions, total_messages, models_used)
       VALUES ($1, $2, $3)
     `, [sessions.length, messages.length, JSON.stringify(modelCount)]);
 
@@ -210,7 +211,7 @@ const apiServer = http.createServer(async (req, res) => {
     } else if (url.pathname === '/api/sessions') {
       const limit = url.searchParams.get('limit') || 50;
       const { rows } = await pool.query(
-        'SELECT * FROM opencode_sessions ORDER BY updated_at DESC LIMIT $1', [limit]
+        'SELECT * FROM \opencode_sessions ORDER BY updated_at DESC LIMIT $1', [limit]
       );
       res.writeHead(200);
       res.end(JSON.stringify(rows));
@@ -218,7 +219,7 @@ const apiServer = http.createServer(async (req, res) => {
     } else if (url.pathname.startsWith('/api/sessions/')) {
       const sessionId = url.pathname.split('/')[3];
       const { rows } = await pool.query(
-        'SELECT * FROM opencode_messages WHERE session_id = $1 ORDER BY created_at ASC',
+        'SELECT * FROM \opencode_messages WHERE session_id = $1 ORDER BY created_at ASC',
         [sessionId]
       );
       res.writeHead(200);
@@ -228,8 +229,8 @@ const apiServer = http.createServer(async (req, res) => {
       const q = url.searchParams.get('q') || '';
       const { rows } = await pool.query(`
         SELECT m.*, s.title as session_title
-        FROM opencode_messages m
-        JOIN opencode_sessions s ON s.id = m.session_id
+        FROM \opencode_messages m
+        JOIN \opencode_sessions s ON s.id = m.session_id
         WHERE m.content ILIKE $1
         ORDER BY m.created_at DESC LIMIT 50
       `, [`%${q}%`]);
@@ -238,7 +239,7 @@ const apiServer = http.createServer(async (req, res) => {
 
     } else if (url.pathname === '/api/stats') {
       const { rows } = await pool.query(
-        'SELECT * FROM opencode_stats ORDER BY recorded_at DESC LIMIT 1'
+        'SELECT * FROM \opencode_stats ORDER BY recorded_at DESC LIMIT 1'
       );
       res.writeHead(200);
       res.end(JSON.stringify(rows[0] || {}));
