@@ -269,7 +269,8 @@ function matchField(fieldTitle, order) {
     ft.includes("telefono") ||
     ft.includes("teléfono") ||
     ft.includes("contacto") ||
-    ft.includes("celular")
+    ft.includes("celular") ||
+    ft.includes("rj")
   )
     return { type: "text", value: FIXED.telefono };
   if (ft.includes("serial instalado") || ft.includes("serial")) {
@@ -527,6 +528,8 @@ async function processOrder(browser, page, order, idx, isTest) {
   }
 }
 
+const chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+
 async function main() {
   // Inicializar reporte diario
   fs.writeFileSync(path.join(__dirname, "reporte_diario.txt"), "=== REPORTE DIARIO DE ORDENES ===\nFecha: " + new Date().toLocaleString() + "\n");
@@ -538,125 +541,75 @@ async function main() {
   if (isTest) orders = orders.slice(0, 1);
   console.log(isTest ? "TEST 1 orden" : orders.length + " ordenes");
 
-  const chromePath =
-    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-  const profileDir = path.join(process.cwd(), "perfil_chrome");
-  const { spawn } = require("child_process");
+  const profileDir = path.join(process.cwd(), "real_user_data_link");
 
-  // Try to connect to existing Chrome first (with Gmail session)
-  let browser;
-  console.log("🔍 Buscando Chrome existente con sesión...");
-  for (let attempt = 0; attempt < 5; attempt++) {
-    try {
-      browser = await puppeteer.connect({
-        browserURL: "http://127.0.0.1:9222",
-      });
-      console.log("✅ Conectado a Chrome existente (con sesión Gmail)");
-      break;
-    } catch (e) {
-      if (attempt < 4) {
-        console.log("  Chrome no encontrado, esperando...");
-        await delay(2000);
-      }
-    }
-  }
+  // Kill ALL Chrome processes to avoid user data conflicts
+  console.log("🔪 Cerrando Chrome existente...");
+  try {
+    require("child_process").execSync("taskkill /F /IM chrome.exe 2>nul", { stdio: "pipe" });
+  } catch (e) {}
+  await delay(4000);
 
-  // If no existing Chrome, launch new one
-  if (!browser) {
-    console.log("\n⚠️  Chrome no está corriendo. Lanzando nuevo...");
-    console.log(
-      "💡 Para evitar captchas: cierra esto, corre 'node setup_profile.js', loguéate en Gmail, y luego reinicia.",
-    );
-    console.log("Lanzando Chrome ahora...\n");
-
-    // Kill existing Chrome gracefully
-    try {
-      require("child_process").execSync("taskkill /F /IM chrome.exe 2>nul", {
-        stdio: "ignore",
-      });
-    } catch (e) {}
-    await delay(2000);
-
-    // Lanzar Chrome desde barra de tareas (start) para simular apertura natural
-    const { exec } = require("child_process");
-    const args = [
-      `--remote-debugging-port=9222`,
-      `--user-data-dir="${profileDir}"`,
-      `--profile-directory=Profile`,
+  // Launch Chrome via Puppeteer con perfil_chrome (ya tiene sesion copiada de Profile 2)
+  console.log("🚀 Lanzando Chrome con perfil_chrome...");
+  const browser = await puppeteer.launch({
+    executablePath: chromePath,
+    userDataDir: profileDir,
+    headless: false,
+    args: [
       `--start-maximized`,
       `--disable-blink-features=AutomationControlled`,
       `--no-first-run`,
       `--no-default-browser-check`,
-    ].join(" ");
-
-    exec(`start "" "${chromePath}" ${args}`, (err) => {
-      if (err) console.log("  ⚠️ Error lanzando Chrome:", err.message);
-    });
-
-    console.log("Chrome lanzado desde barra de tareas (start)");
-    console.log("Perfil: " + profileDir);
-    console.log("Esperando que Chrome inicie...");
-
-    // Wait for DevToolsActivePort to appear
-    const devtoolsPortFile = path.join(profileDir, "DevToolsActivePort");
-    for (let w = 0; w < 20; w++) {
-      if (fs.existsSync(devtoolsPortFile)) {
-        const content = fs.readFileSync(devtoolsPortFile, "utf8");
-        console.log(
-          "DevToolsActivePort encontrado: " + content.trim().split("\n")[0],
-        );
-        break;
-      }
-      await delay(1000);
-    }
-
-    // Connect to the real Chrome
-    for (let attempt = 0; attempt < 10; attempt++) {
-      try {
-        browser = await puppeteer.connect({
-          browserURL: "http://127.0.0.1:9222",
-        });
-        console.log("Conectado a Chrome real");
-        break;
-      } catch (e) {
-        console.log("  Intento " + (attempt + 1) + " fallo, reintentando...");
-        await delay(2000);
-      }
-    }
-  }
-
-  if (!browser) {
-    console.log("No se pudo conectar a Chrome");
-    process.exit(1);
-  }
-
-  const page = await browser.newPage();
-  page.setDefaultTimeout(30000);
-  await page.setViewport({ width: 1920, height: 1080 });
-
-  await page.setRequestInterception(true);
-  page.on("request", (req) => {
-    try {
-      const url = req.url();
-      if (
-        url.includes("google-analytics") ||
-        url.includes("googlesyndication") ||
-        url.includes("doubleclick") ||
-        url.includes("googleadservices") ||
-        url.includes("pagead2") ||
-        url.includes("analytics")
-      )
-        req.abort();
-      else req.continue();
-    } catch (_) {}
+      `--no-sandbox`,
+    ],
+    defaultViewport: null,
   });
 
-  for (let i = 0; i < orders.length; i++) {
-    await processOrder(browser, page, orders[i], i, isTest);
-    if (!isTest) await delay(1500);
+  async function setupPage(p) {
+    p.setDefaultTimeout(30000);
+    await p.setViewport({ width: 1920, height: 1080 });
+    await p.setRequestInterception(true);
+    p.on("request", (req) => {
+      try {
+        const url = req.url();
+        if (
+          url.includes("google-analytics") ||
+          url.includes("googlesyndication") ||
+          url.includes("doubleclick") ||
+          url.includes("googleadservices") ||
+          url.includes("pagead2") ||
+          url.includes("analytics")
+        )
+          req.abort();
+        else req.continue();
+      } catch (_) {}
+    });
   }
 
-  console.log("\nCOMPLETADO!");
+  const PARALLEL_LIMIT = isTest ? 1 : 4;
+  console.log("\n🚀 Procesando " + orders.length + " ordenes (" + PARALLEL_LIMIT + " en paralelo)...\n");
+
+  for (let batchStart = 0; batchStart < orders.length; batchStart += PARALLEL_LIMIT) {
+    const batch = orders.slice(batchStart, batchStart + PARALLEL_LIMIT);
+    const batchPromises = batch.map(async (order, batchIdx) => {
+      const globalIdx = batchStart + batchIdx;
+      const p = await browser.newPage();
+      await setupPage(p);
+      try {
+        await processOrder(browser, p, order, globalIdx, isTest);
+      } catch (e) {
+        console.error("  ❌ Error en orden " + order.ot + ": " + (e.message || e).substring(0, 200));
+        fs.appendFileSync(path.join(__dirname, "reporte_diario.txt"), "  ❌ ERROR PARALELO: " + (e.message || e).substring(0, 200) + "\n");
+      } finally {
+        try { await p.close(); } catch (_) {}
+      }
+    });
+    await Promise.all(batchPromises);
+    console.log("\n📊 Lote " + (Math.floor(batchStart / PARALLEL_LIMIT) + 1) + " completado\n");
+  }
+
+  console.log("\n✅ COMPLETADO!");
 }
 
 main().catch((e) => {
