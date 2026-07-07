@@ -18,6 +18,8 @@ services:
       PORT: "21293"
       OPENCODE_WORKSPACE: /workspace
       OPENCODE_SERVER_PASSWORD: "6715320Dvd."
+    ports:
+      - "21293:21293"
       # PostgreSQL — Credenciales del servicio en EasyPanel
       # Hostname interno (dentro de EasyPanel): tecnoia_tecnologi
       # Hostname externo: 144.91.112.79

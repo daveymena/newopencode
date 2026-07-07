@@ -546,7 +546,7 @@ server.on("upgrade", (req, socket, head) => {
   }
 });
 
-server.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, () => {
   console.log(`[proxy] Proxy UI escuchando en puerto ${PORT}`);
-  console.log(`  → Proxying a OpenCode en ${OPENCODE_TARGET}`);
+  console.log(`  → Proxying a OpenCode en http://localhost:${TARGET_PORT}`);
 });

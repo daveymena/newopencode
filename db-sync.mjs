@@ -267,14 +267,17 @@ const apiServer = http.createServer(async (req, res) => {
 
 // ── Inicio ───────────────────────────────────────────────────
 async function main() {
-  console.log('[sync] Conectando a PostgreSQL (EasyPanel)...');
-  await pool.query('SELECT 1'); // test conexión
-  console.log('[sync] ✓ Conectado a PostgreSQL');
-
-  await initDatabase();
-
-  // Sincronización inicial
-  await syncToPostgres().catch(e => console.warn('[sync] Sync inicial omitida:', e.message));
+  try {
+    console.log('[sync] Conectando a PostgreSQL (EasyPanel)...');
+    await pool.query('SELECT 1'); // test conexión
+    console.log('[sync] ✓ Conectado a PostgreSQL');
+    await initDatabase();
+    // Sincronización inicial
+    await syncToPostgres().catch(e => console.warn('[sync] Sync inicial omitida:', e.message));
+  } catch(e) {
+    console.warn('[sync] ⚠️ No se pudo conectar a PostgreSQL al inicio:', e.message);
+    console.warn('[sync] ⚠️ El servicio continuará e intentará conectar en los auto-syncs.');
+  }
 
   // Auto-sync cada 5 minutos
   setInterval(() => {
@@ -293,6 +296,7 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error('[sync] Error fatal:', err);
-  process.exit(1);
+  console.error('[sync] Error no controlado:', err.message);
+  // No salimos con process.exit(1) para mantener viva la API y reintentar
+
 });
