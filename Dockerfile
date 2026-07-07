@@ -174,8 +174,10 @@ ENV PORT=21293
 ENV OPENCODE_INTERNAL_PORT=21294
 ENV SYNC_API_PORT=21295
 ENV OPENCODE_WORKSPACE=/workspace
-# ← Reemplaza con tu URL interna de EasyPanel al desplegar
-ENV DATABASE_URL=postgres://postgres:6715320@tecnology_base-open:5432/davey?sslmode=disable
+# DATABASE_URL se configura en EasyPanel > Environment Variables de tu servicio
+# NO pongas credenciales aquí — configúralas directamente en EasyPanel
+# Ejemplo: postgresql://postgres:TU_PASSWORD@postgres:5432/opencode
+# (El hostname 'postgres' es el nombre del servicio de BD en EasyPanel)
 
 # Volúmenes para persistencia
 VOLUME ["/workspace", "/root/.local/share/opencode"]

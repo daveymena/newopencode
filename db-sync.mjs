@@ -14,8 +14,15 @@ const { Pool } = pg;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ── Conexión PostgreSQL (EasyPanel) ─────────────────────────
-const DATABASE_URL = process.env.DATABASE_URL ||
-  'postgres://postgres:6715320@35.254.218.190:5433/davey?sslmode=disable';
+// DATABASE_URL se configura en EasyPanel > Environment Variables
+// Formato: postgresql://usuario:password@hostname:puerto/nombre_bd
+if (!process.env.DATABASE_URL) {
+  console.error('[sync] ERROR FATAL: DATABASE_URL no está configurada.');
+  console.error('[sync] Configúrala en EasyPanel > tu servicio > Environment Variables.');
+  console.error('[sync] Ejemplo: postgresql://postgres:tu_password@postgres:5432/opencode');
+  process.exit(1);
+}
+const DATABASE_URL = process.env.DATABASE_URL;
 
 const PREFIX = process.env.DB_PREFIX || '';
 const pool = new Pool({ connectionString: DATABASE_URL });

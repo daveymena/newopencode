@@ -1,6 +1,11 @@
-import pg from './artifacts/opencode-ui/node_modules/pg/lib/index.js';
+import pg from 'pg';
 const { Client } = pg;
-const DB = 'postgres://postgres:6715320@35.254.218.190:5433/davey?sslmode=disable';
+// Usa la DATABASE_URL del entorno (configúrala en EasyPanel)
+const DB = process.env.DATABASE_URL;
+if (!DB) {
+  console.error('ERROR: DATABASE_URL no está configurada. Usa: node setup-db.mjs con DATABASE_URL=postgresql://...');
+  process.exit(1);
+}
 const client = new Client({ connectionString: DB });
 
 async function main() {
