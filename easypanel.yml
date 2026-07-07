@@ -21,10 +21,10 @@ services:
       # PostgreSQL (corre en el mismo servidor)
       DB_HOST: "144.91.112.79"
       DB_PORT: "5432"
-      DB_USER: "postgres"
+      DB_USER: "PostgreSQL"
       DB_PASSWORD: "6715320D"
       DB_NAME: "tecno"
-      DATABASE_URL: "postgresql://postgres:6715320D@144.91.112.79:5432/tecno?sslmode=disable"
+      DATABASE_URL: "postgresql://PostgreSQL:6715320D@144.91.112.79:5432/tecno?sslmode=disable"
 
       # ---- GRATUITOS (solo registro) ----
       # Groq → https://console.groq.com/keys
