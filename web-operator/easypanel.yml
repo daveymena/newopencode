@@ -1,0 +1,16 @@
+version: '1.0'
+services:
+  web-operator:
+    type: node
+    buildCommand: npm install
+    startCommand: node api-server.js
+    port: 3001
+    env:
+      - PORT=3001
+      - FREEMODEL_API_KEY
+      - FREEMODEL_BASE_URL
+      - FREEMODEL_MODEL
+      - OPENAI_API_KEY
+      - PUTER_AUTH_TOKEN
+    domains:
+      - operator.davey.duckdns.org

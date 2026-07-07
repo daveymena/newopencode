@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Operator Agent</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f13; color: #e0e0e0; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 20px 30px; border-bottom: 1px solid #2a2a3e; }
+  .header h1 { font-size: 24px; color: #00d4ff; }
+  .header p { font-size: 13px; color: #888; margin-top: 4px; }
+  .container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; }
+  @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+  .card { background: #1a1a2e; border-radius: 12px; border: 1px solid #2a2a3e; overflow: hidden; }
+  .card-header { padding: 14px 18px; border-bottom: 1px solid #2a2a3e; font-weight: 600; font-size: 14px; color: #aaa; display: flex; align-items: center; gap: 8px; }
+  .card-body { padding: 18px; }
+  label { display: block; margin-bottom: 6px; color: #aaa; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input, textarea, select { width: 100%; padding: 10px 12px; background: #0f0f13; border: 1px solid #2a2a3e; border-radius: 8px; color: #e0e0e0; font-size: 14px; }
+  textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+  button { padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+  .btn-primary { background: #00d4ff; color: #000; }
+  .btn-primary:hover { background: #00b8e0; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-danger { background: #ff4444; color: #fff; }
+  .btn-danger:hover { background: #cc0000; }
+  .btn-secondary { background: #2a2a3e; color: #e0e0e0; }
+  .btn-secondary:hover { background: #3a3a4e; }
+  .flex { display: flex; gap: 10px; }
+  .mt-3 { margin-top: 12px; }
+  .mb-3 { margin-bottom: 12px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 20px; font-size: 12px; }
+  .badge-running { background: #00d4ff22; color: #00d4ff; border: 1px solid #00d4ff44; }
+  .badge-ready { background: #00ff8822; color: #00ff88; border: 1px solid #00ff8844; }
+  .badge-error { background: #ff444422; color: #ff4444; border: 1px solid #ff444444; }
+  .badge-idle { background: #88888822; color: #888; border: 1px solid #88888844; }
+  .log-container { background: #0a0a0e; padding: 12px; border-radius: 8px; max-height: 400px; overflow-y: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; line-height: 1.6; }
+  .log-entry { padding: 2px 0; border-bottom: 1px solid #1a1a1e; }
+  .log-entry:last-child { border-bottom: none; }
+  .log-time { color: #666; margin-right: 8px; }
+  .screenshot-container { max-width: 100%; overflow: hidden; border-radius: 8px; border: 1px solid #2a2a3e; }
+  .screenshot-container img { width: 100%; height: auto; display: block; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .status-dot.green { background: #00ff88; }
+  .status-dot.blue { background: #00d4ff; animation: pulse 1.5s infinite; }
+  .status-dot.red { background: #ff4444; }
+  .status-dot.gray { background: #888; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .result-box { background: #0a0a0e; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 13px; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+  .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .action-item { padding: 6px 10px; background: #0f0f13; border-radius: 4px; font-size: 11px; display: flex; justify-content: space-between; }
+  .action-ok { color: #00ff88; } .action-fail { color: #ff4444; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🤖 Web Operator Agent</h1>
+  <p>Clon de ChatGPT Operator - Controla el navegador con IA</p>
+</div>
+
+<div class="container">
+  <!-- Left column: Controls -->
+  <div>
+    <div class="card mb-3">
+      <div class="card-header">🎮 Control Panel</div>
+      <div class="card-body">
+        <div class="flex" style="align-items:center;margin-bottom:12px;">
+          <span id="statusBadge" class="badge badge-idle">○ Idle</span>
+          <span id="iterationDisplay" style="margin-left:auto;color:#666;font-size:12px;"></span>
+        </div>
+
+        <div class="mb-3">
+          <label>🌐 URL inicial (opcional)</label>
+          <input type="text" id="startUrl" placeholder="https://ejemplo.com" value="">
+        </div>
+
+        <div class="mb-3">
+          <label>📋 Descripción de la tarea</label>
+          <textarea id="taskInput" placeholder="Ej: Ve a la pagina de inicio de sesion, ingresa usuario y contraseña, y haz clic en Iniciar Sesion">explora la pagina y dime que contiene</textarea>
+        </div>
+
+        <div class="flex">
+          <button id="runBtn" class="btn-primary" onclick="runTask()">▶ Ejecutar</button>
+          <button id="cancelBtn" class="btn-danger" onclick="cancelTask()" disabled>■ Cancelar</button>
+          <button class="btn-secondary" onclick="clearLog()">🗑 Limpiar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">📊 Resultado</div>
+      <div class="card-body">
+        <div id="resultContainer" class="result-box">No hay resultados aun</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">📜 Historial de Acciones</div>
+      <div class="card-body">
+        <div id="actionsContainer" class="actions-grid" style="min-height:100px;">
+          <div style="grid-column:span 2;color:#666;font-size:13px;">Esperando tarea...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right column: Logs & Screenshot -->
+  <div>
+    <div class="card mb-3">
+      <div class="card-header">📸 Screenshot en vivo</div>
+      <div class="card-body">
+        <div id="screenshotContainer" class="screenshot-container">
+          <div style="padding:40px;text-align:center;color:#666;">Esperando screenshot...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">📝 Logs</div>
+      <div class="card-body">
+        <div id="logContainer" class="log-container"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ws = new WebSocket(`ws://${location.host}`);
+let taskRunning = false;
+let logCount = 0;
+
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  switch (data.type) {
+    case 'connected':
+      addLog('Sistema conectado al servidor');
+      break;
+    case 'task_started':
+      taskRunning = true;
+      updateUI();
+      addLog('🚀 Tarea iniciada: ' + (data.task?.task || ''));
+      break;
+    case 'task_completed':
+      taskRunning = false;
+      updateUI();
+      addLog('✅ Tarea completada');
+      showResult(data.result);
+      if (data.result?.history) showActions(data.result.history);
+      if (data.result?.screenshot) showScreenshot(data.result.screenshot);
+      break;
+    case 'task_error':
+      taskRunning = false;
+      updateUI();
+      addLog('❌ Error: ' + data.error);
+      break;
+    case 'task_cancelled':
+      taskRunning = false;
+      updateUI();
+      addLog('⛔ Tarea cancelada');
+      break;
+    case 'log':
+      addLog(data.text);
+      break;
+    case 'last_result':
+      if (data.result) {
+        if (data.result.history) showActions(data.result.history);
+        if (data.result.screenshot) showScreenshot(data.result.screenshot);
+      }
+      break;
+    case 'task_status':
+      if (data.running) taskRunning = true;
+      updateUI();
+      break;
+  }
+};
+
+ws.onclose = () => {
+  addLog('⚠️ Conexion WebSocket perdida. Recarga la pagina.');
+};
+
+function updateUI() {
+  const badge = document.getElementById('statusBadge');
+  const runBtn = document.getElementById('runBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+
+  if (taskRunning) {
+    badge.className = 'badge badge-running';
+    badge.innerHTML = '<span class="status-dot blue"></span> Running';
+    runBtn.disabled = true;
+    cancelBtn.disabled = false;
+  } else {
+    badge.className = 'badge badge-ready';
+    badge.innerHTML = '<span class="status-dot green"></span> Ready';
+    runBtn.disabled = false;
+    cancelBtn.disabled = true;
+  }
+}
+
+function addLog(text) {
+  const container = document.getElementById('logContainer');
+  const time = new Date().toLocaleTimeString();
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">[${time}]</span>${escapeHtml(text)}`;
+  container.appendChild(entry);
+  container.scrollTop = container.scrollHeight;
+  logCount++;
+  if (logCount > 200) {
+    container.removeChild(container.firstChild);
+  }
+}
+
+function escapeHtml(text) {
+  const d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML;
+}
+
+async function runTask() {
+  const task = document.getElementById('taskInput').value.trim();
+  const url = document.getElementById('startUrl').value.trim();
+
+  if (!task) { alert('Describe la tarea'); return; }
+
+  addLog('🔄 Enviando tarea al servidor...');
+
+  try {
+    const resp = await fetch('/api/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task, url, headless: false }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json();
+      addLog('❌ Error: ' + (err.error || 'Unknown'));
+    }
+  } catch (e) {
+    addLog('❌ Error de conexion: ' + e.message);
+  }
+}
+
+async function cancelTask() {
+  try {
+    await fetch('/api/cancel', { method: 'POST' });
+    addLog('⛔ Cancelando tarea...');
+  } catch (e) {
+    addLog('❌ Error: ' + e.message);
+  }
+}
+
+function clearLog() {
+  document.getElementById('logContainer').innerHTML = '';
+  logCount = 0;
+}
+
+function showResult(result) {
+  const container = document.getElementById('resultContainer');
+  if (!result) {
+    container.textContent = 'Sin resultado';
+    return;
+  }
+  const status = result.success ? '✅ Exitoso' : '❌ Fallo';
+  const msg = result.message || '';
+  const iterations = result.iterations || 0;
+  const extracted = result.extractedData || result.partialData || '';
+  container.innerHTML = `Status: ${status}\nMensaje: ${msg}\nIteraciones: ${iterations}\n\nDatos extraídos:\n${escapeHtml(extracted.slice(0, 2000))}`;
+}
+
+function showActions(history) {
+  const container = document.getElementById('actionsContainer');
+  if (!history || history.length === 0) {
+    container.innerHTML = '<div style="grid-column:span 2;color:#666;">Sin acciones</div>';
+    return;
+  }
+  container.innerHTML = history.slice(-20).map(h => {
+    const actionText = `${h.action?.type || '?'}: ${h.action?.target || h.action?.value || ''}`;
+    const statusClass = h.result?.success ? 'action-ok' : 'action-fail';
+    const statusText = h.result?.success ? '✓' : '✗';
+    return `<div class="action-item"><span>${escapeHtml(actionText)}</span><span class="${statusClass}">${statusText}</span></div>`;
+  }).join('');
+}
+
+function showScreenshot(base64) {
+  const container = document.getElementById('screenshotContainer');
+  container.innerHTML = `<img src="data:image/png;base64,${base64}" alt="Screenshot">`;
+}
+
+// Initial status check
+fetch('/api/status').then(r => r.json()).then(data => {
+  if (data.running) {
+    taskRunning = true;
+    updateUI();
+    addLog('🔄 Tarea en ejecucion detectada al conectar');
+  }
+  if (data.lastResult) {
+    if (data.lastResult.history) showActions(data.lastResult.history);
+    if (data.lastResult.screenshot) showScreenshot(data.lastResult.screenshot);
+    showResult(data.lastResult);
+  }
+}).catch(() => {});
+
+addLog('✅ Web Operator Agent listo. Describe una tarea y ejecutala.');
+</script>
+</body>
+</html>

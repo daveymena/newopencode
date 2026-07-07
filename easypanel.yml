@@ -57,6 +57,24 @@ services:
         name: opencode-config
         mountPath: /root/.config/opencode
 
+  # ---- Web Operator Agent (clon de ChatGPT Operator) ----
+  web-operator:
+    type: app
+    build:
+      type: dockerfile
+      file: web-operator/Dockerfile
+    env:
+      PORT: "3001"
+      FREEMODEL_API_KEY: "fe_oa_db8434da9d092b657e26dba8e2cdbf5cc460848f7e3b490c"
+      FREEMODEL_BASE_URL: "https://api.freemodel.dev/v1"
+      FREEMODEL_MODEL: "gpt-4o"
+      PUTER_AUTH_TOKEN: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0IjoiZ3VpIiwidiI6IjAuMC4wIiwidSI6ImRDdjMrQURQU1BldFk0Z09JLyt3Umc9PSIsInV1Ijoic0VDNE5SZi9Ra3FBYWlIZ1FsTWNWZz09IiwiaWF0IjoxNzc4ODYyMDk2fQ.OA-DQOWYxuE0tSxhR4Egl2x50KSgYyPeu-HjT-JqSrs"
+    ports:
+      - "3001"
+    resources:
+      memoryLimit: 1024
+      cpuLimit: 1
+
     resources:
       # Ajusta según tu servidor
       memoryLimit: 2048  # 2GB RAM mínimo

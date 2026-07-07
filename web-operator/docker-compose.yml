@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  web-operator:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - FREEMODEL_API_KEY=${FREEMODEL_API_KEY}
+      - FREEMODEL_BASE_URL=${FREEMODEL_BASE_URL}
+      - FREEMODEL_MODEL=${FREEMODEL_MODEL:-gpt-4o}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PUTER_AUTH_TOKEN=${PUTER_AUTH_TOKEN}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    shm_size: 2gb
