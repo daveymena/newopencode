@@ -18,18 +18,15 @@ services:
       PORT: "21293"
       OPENCODE_WORKSPACE: /workspace
       OPENCODE_SERVER_PASSWORD: "6715320Dvd."
-      # ════════════════════════════════════════════════════
-      # POSTGRESQL — Actualiza estos valores con tus credenciales reales
-      # Para encontrar el hostname correcto en EasyPanel:
-      #   Panel > tu proyecto > servicio PostgreSQL > Internal Connection
-      # El hostname interno suele ser: <proyecto>_<servicio>  ej: openco_postgres
-      # ════════════════════════════════════════════════════
-      DB_HOST: "HOSTNAME_INTERNO_EASYPANEL"
+      # PostgreSQL — Credenciales del servicio en EasyPanel
+      # Hostname interno (dentro de EasyPanel): tecnoia_tecnologi
+      # Hostname externo: 144.91.112.79
+      DB_HOST: "tecnoia_tecnologi"
       DB_PORT: "5432"
-      DB_USER: "postgres"
-      DB_PASSWORD: "TU_PASSWORD_AQUI"
-      DB_NAME: "TU_BASE_DE_DATOS"
-      DATABASE_URL: "postgresql://postgres:TU_PASSWORD_AQUI@HOSTNAME_INTERNO_EASYPANEL:5432/TU_BASE_DE_DATOS?sslmode=disable"
+      DB_USER: "PostgreSQL"
+      DB_PASSWORD: "6715320D"
+      DB_NAME: "tecno"
+      DATABASE_URL: "postgres://PostgreSQL:6715320D@tecnoia_tecnologi:5432/tecno?sslmode=disable"
 
       # ---- GRATUITOS (solo registro) ----
       # Groq → https://console.groq.com/keys
