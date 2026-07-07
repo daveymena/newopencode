@@ -92,9 +92,20 @@ opencode serve \
 OC_PID=$!
 echo "  ✓ Motor OpenCode PID=$OC_PID → puerto $OPENCODE_INTERNAL_PORT"
 
-# 2. Proxy web (puerto público)
+# 2. API Server (rutas: /api/models, /api/sessions, /api/files, /api/terminal, /api/chat)
+API_SERVER_PORT=${API_SERVER_PORT:-21296}
+PORT=$API_SERVER_PORT \
+WORKSPACE_ROOT="${OPENCODE_WORKSPACE:-/workspace}" \
+DATABASE_URL="${DATABASE_URL:-}" \
+OPENCODE_INTERNAL_PORT=$OPENCODE_INTERNAL_PORT \
+  node /app/api-dist/index.mjs &
+API_PID=$!
+echo "  ✓ API Server PID=$API_PID → puerto $API_SERVER_PORT"
+
+# 3. Proxy web (puerto público)
 PORT=$PROXY_PORT \
 OPENCODE_INTERNAL_PORT=$OPENCODE_INTERNAL_PORT \
+API_SERVER_PORT=$API_SERVER_PORT \
   node /app/proxy.mjs &
 PROXY_PID=$!
 echo "  ✓ Proxy web PID=$PROXY_PID → puerto $PROXY_PORT"
@@ -133,6 +144,7 @@ cleanup() {
   curl -s -X POST "http://localhost:${PROXY_PORT}/api/sync-now" || true
   echo "✓ Sincronización final completada."
   kill $OC_PID 2>/dev/null
+  kill $API_PID 2>/dev/null
   kill $PROXY_PID 2>/dev/null
   kill $SYNC_PID 2>/dev/null
   exit 0

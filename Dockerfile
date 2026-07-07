@@ -162,6 +162,30 @@ COPY db-sync.mjs /app/db-sync.mjs
 RUN mkdir -p /app && cd /app && npm init -y && \
     npm install express http-proxy-middleware pg ws --save
 
+
+# ══════════════════════════════════════════════════════════════
+# BUILD: Compilar React frontend y API server
+# ══════════════════════════════════════════════════════════════
+WORKDIR /build
+COPY package.json pnpm-workspace.yaml tsconfig.base.json tsconfig.json ./
+COPY lib/ ./lib/
+COPY artifacts/opencode-ui/ ./artifacts/opencode-ui/
+COPY artifacts/api-server/ ./artifacts/api-server/
+
+# Instalar dependencias del workspace de build
+RUN pnpm install --no-frozen-lockfile --ignore-scripts 2>&1 | tail -3
+
+# Build React frontend (BASE_PATH=/ para Docker, PORT solo para dev)
+ENV BASE_PATH=/ PORT=3000 NODE_ENV=production
+RUN pnpm --filter @workspace/opencode-ui run build 2>&1 | tail -5 && echo "✓ React build OK"
+
+# Build API server (TypeScript → JS)
+RUN pnpm --filter @workspace/api-server run build 2>&1 | tail -5 && echo "✓ API build OK"
+
+# Copiar artefactos compilados a /app/
+RUN mkdir -p /app/ui && cp -r /build/artifacts/opencode-ui/dist/public/. /app/ui/ && echo "✓ UI copiado"
+RUN mkdir -p /app/api-dist && cp -r /build/artifacts/api-server/dist/. /app/api-dist/ && echo "✓ API dist copiado"
+
 # Copiar script de inicio
 COPY docker/start.sh /usr/local/bin/start-opencode.sh
 RUN chmod +x /usr/local/bin/start-opencode.sh

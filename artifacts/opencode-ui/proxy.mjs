@@ -14,6 +14,9 @@ const PORT            = parseInt(process.env.PORT || "21293");
 const OPENCODE_PORT   = parseInt(process.env.OPENCODE_INTERNAL_PORT || "21294");
 const OPENCODE_TARGET = `http://localhost:${OPENCODE_PORT}`;
 
+const API_SERVER_PORT = parseInt(process.env.API_SERVER_PORT || "21296");
+const API_SERVER_TARGET = `http://localhost:${API_SERVER_PORT}`;
+
 // ── Agentes PC conectados ─────────────────────────────────
 const pcAgents = new Map(); // agentId → { ws, name, sysinfo, connectedAt }
 const pendingCmds = new Map();
@@ -35,6 +38,16 @@ const app = express();
 // ── Health check propio (responde siempre, aunque OpenCode no haya arrancado)
 app.get("/health", (req, res) => res.json({ status: "ok", proxy: true, timestamp: Date.now() }));
 
+
+// ── React App (frontend compilado) ─────────────────────────
+const UI_DIR = '/app/ui';
+const UI_INDEX = '/app/ui/index.html';
+if (existsSync(UI_DIR)) {
+  app.use(express.static(UI_DIR, { index: false }));
+  console.log('[proxy] ✓ Sirviendo React app desde /app/ui/');
+} else {
+  console.log('[proxy] ⚠ React app no encontrada en /app/ui/ — usando OpenCode UI');
+}
 
 // ── Static shell files (CSS + JS personalizado) ──────────────
 app.use("/__shell", express.static(path.join(__dirname, "public")));
@@ -455,12 +468,38 @@ goto loop
 
 // (Duplicado eliminado — /api ya registrado en línea 331)
 
+// ── Proxy dinámico al API Server (modelos, sesiones, archivos, terminal, chat) ──
+const apiServerProxy = createProxyMiddleware({
+  target: API_SERVER_TARGET,
+  changeOrigin: true,
+  on: {
+    error: (err, req, res) => {
+      if (!res.headersSent) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'API Server no disponible', detail: err.message }));
+      }
+    }
+  }
+});
+
 app.use((req, res, next) => {
-  // Solo aplicamos el proxy HTML a peticiones que esperan HTML
-  if (req.headers.accept && req.headers.accept.includes("text/html")) {
-    htmlProxy(req, res, next);
+  const isApi = req.url.startsWith('/api');
+  const acceptsHtml = req.headers.accept?.includes('text/html');
+
+  if (isApi) {
+    // Peticiones /api/* → api-server (ya manejadas por customApi si coinciden,
+    // las que no coincidieron caen aquí)
+    apiServerProxy(req, res, next);
+  } else if (acceptsHtml || (!isApi && !req.url.includes('.'))) {
+    // Rutas de la SPA React (sin extensión de archivo = ruta de cliente)
+    if (existsSync(UI_INDEX)) {
+      res.sendFile(UI_INDEX);
+    } else {
+      // Fallback al UI de OpenCode si no está compilado el frontend
+      htmlProxy(req, res, next);
+    }
   } else {
-    // Todo lo demás (API, SSE, WebSockets, JS, CSS) pasa directo sin modificaciones
+    // Assets estáticos no encontrados, ficheros JS/CSS → OpenCode proxy
     apiProxy(req, res, next);
   }
 });
