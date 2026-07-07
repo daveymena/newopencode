@@ -12,13 +12,18 @@ services:
       file: Dockerfile
     domains:
       - host: "$(PRIMARY_DOMAIN)"
-        port: 3000
+        port: 21293
         https: true
     env:
-      # Puerto
-      PORT: "3000"
+      PORT: "21293"
       OPENCODE_WORKSPACE: /workspace
       OPENCODE_SERVER_PASSWORD: "6715320Dvd."
+      # PostgreSQL (crealo en EasyPanel como 'tecnology_base')
+      DB_HOST: "tecnology_base"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: ""
+      DB_NAME: "opencode"
 
       # ---- GRATUITOS (solo registro) ----
       # Groq → https://console.groq.com/keys
