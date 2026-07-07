@@ -7,6 +7,7 @@ import https from "https";
 import http from "http";
 import { WebSocketServer } from "ws";
 import { randomUUID } from "crypto";
+import { existsSync } from "fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -482,6 +483,21 @@ const apiServerProxy = createProxyMiddleware({
   }
 });
 
+// ── Bridge para Modelos Freemodel (OpenAI Compatible) ──
+const freemodelBridge = createProxyMiddleware({
+  target: process.env.FREEMODEL_BASE_URL || 'https://api.freemodel.dev/v1',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/bridge/v1': ''
+  },
+  on: {
+    proxyReq: (proxyReq) => {
+      proxyReq.setHeader('Authorization', `Bearer ${process.env.FREEMODEL_API_KEY || 'fe_oa_db8434da9d092b657e26dba8e2cdbf5cc460848f7e3b490c'}`);
+    }
+  }
+});
+app.use('/api/bridge/v1', freemodelBridge);
+
 app.use((req, res, next) => {
   const isApi = req.url.startsWith('/api');
   const acceptsHtml = req.headers.accept?.includes('text/html');
@@ -548,5 +564,5 @@ server.on("upgrade", (req, socket, head) => {
 
 server.listen(PORT, () => {
   console.log(`[proxy] Proxy UI escuchando en puerto ${PORT}`);
-  console.log(`  → Proxying a OpenCode en http://localhost:${TARGET_PORT}`);
+  console.log(`  → Proxying a OpenCode en http://localhost:${OPENCODE_PORT}`);
 });
