@@ -75,11 +75,6 @@ services:
       memoryLimit: 1024
       cpuLimit: 1
 
-    resources:
-      # Ajusta según tu servidor
-      memoryLimit: 2048  # 2GB RAM mínimo
-      cpuLimit: 2        # 2 núcleos mínimo
-
   # ---- Ollama (opcional, para modelos locales gratuitos) ----
   # Para activarlo, descomenta este bloque y actualiza OLLAMA_HOST arriba
   # ollama:
