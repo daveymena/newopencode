@@ -72,9 +72,9 @@ elif curl -s --connect-timeout 2 http://ollama:11434 > /dev/null 2>&1; then
 fi
 
 # ---- Puertos ---- #
-OPENCODE_INTERNAL_PORT=${OPENCODE_INTERNAL_PORT:-3001}
-PROXY_PORT=${PORT:-3000}
-SYNC_PORT=${SYNC_API_PORT:-3002}
+OPENCODE_INTERNAL_PORT=${OPENCODE_INTERNAL_PORT:-21294}
+PROXY_PORT=${PORT:-21293}
+SYNC_PORT=${SYNC_API_PORT:-21295}
 
 # ---- Crear estructura de directorios ---- #
 mkdir -p "${OPENCODE_WORKSPACE:-/workspace}/proyectos"

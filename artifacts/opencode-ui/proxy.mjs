@@ -32,6 +32,9 @@ async function sendToAgent(agentId, cmd, timeout = 30000) {
 
 const app = express();
 
+// ── Health check propio (responde siempre, aunque OpenCode no haya arrancado)
+app.get("/health", (req, res) => res.json({ status: "ok", proxy: true, timestamp: Date.now() }));
+
 
 // ── Static shell files (CSS + JS personalizado) ──────────────
 app.use("/__shell", express.static(path.join(__dirname, "public")));
@@ -244,8 +247,35 @@ const htmlProxy = createProxyMiddleware({
     },
     error: (err, req, res) => {
       if (!res.headersSent) {
-        res.writeHead(502, { "Content-Type": "text/plain; charset=utf-8" });
-        res.end("OpenCode no está disponible todavía. Iniciando...");
+        res.writeHead(502, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="5">
+  <title>OpenCode — Iniciando...</title>
+  <style>
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#07070d; font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; color:#f0f0ff; }
+    .box { text-align:center; padding:3rem; background:rgba(255,255,255,0.03); border:1px solid rgba(124,58,237,0.25); border-radius:16px; backdrop-filter:blur(20px); max-width:420px; }
+    h1 { margin:0 0 .5rem; font-size:1.6rem; }
+    .badge { display:inline-block; font-size:.7rem; font-weight:700; letter-spacing:1px; color:#8b5cf6; background:rgba(124,58,237,0.15); border:1px solid rgba(124,58,237,0.3); border-radius:4px; padding:2px 8px; text-transform:uppercase; margin-bottom:1.2rem; }
+    p { color:rgba(200,200,230,0.7); line-height:1.6; font-size:.95rem; }
+    .spinner { width:36px; height:36px; border:3px solid rgba(124,58,237,0.25); border-top-color:#7c3aed; border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 1.5rem; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .hint { font-size:.8rem; color:rgba(160,160,200,0.5); margin-top:1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="spinner"></div>
+    <h1>OpenCode</h1>
+    <div class="badge">EVOLVED</div>
+    <p>El motor de IA está iniciando...<br>La página se recargará automáticamente.</p>
+    <p class="hint">Esto puede tomar hasta 40 segundos en el primer arranque.</p>
+  </div>
+</body>
+</html>`);
       }
     },
   },
@@ -423,7 +453,7 @@ goto loop
   res.send(batContent);
 });
 
-app.use("/api", customApi);
+// (Duplicado eliminado — /api ya registrado en línea 331)
 
 app.use((req, res, next) => {
   // Solo aplicamos el proxy HTML a peticiones que esperan HTML

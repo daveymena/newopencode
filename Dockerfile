@@ -167,12 +167,12 @@ COPY docker/start.sh /usr/local/bin/start-opencode.sh
 RUN chmod +x /usr/local/bin/start-opencode.sh
 
 # Puertos
-EXPOSE 3000
+EXPOSE 21293
 
 # Variables de entorno por defecto
-ENV PORT=3000
-ENV OPENCODE_INTERNAL_PORT=3001
-ENV SYNC_API_PORT=3002
+ENV PORT=21293
+ENV OPENCODE_INTERNAL_PORT=21294
+ENV SYNC_API_PORT=21295
 ENV OPENCODE_WORKSPACE=/workspace
 # ← Reemplaza con tu URL interna de EasyPanel al desplegar
 ENV DATABASE_URL=postgres://postgres:6715320@tecnology_base-open:5432/davey?sslmode=disable
