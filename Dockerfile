@@ -49,7 +49,7 @@ COPY scripts/package.json /app/scripts/
 COPY web-operator/package.json /app/web-operator/
 
 # ── Instalar dependencias de produccion con pnpm ───────────────────────────────
-RUN pnpm install --no-frozen-lockfile --prod
+RUN pnpm install --no-frozen-lockfile --prod --ignore-scripts
 
 # ── Copiar resto del proyecto ──────────────────────────────────────────────────
 COPY . .
