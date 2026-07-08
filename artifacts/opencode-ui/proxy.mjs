@@ -473,6 +473,7 @@ goto loop
 const apiServerProxy = createProxyMiddleware({
   target: API_SERVER_TARGET,
   changeOrigin: true,
+  ws: true,
   on: {
     error: (err, req, res) => {
       if (!res.headersSent) {
@@ -481,6 +482,472 @@ const apiServerProxy = createProxyMiddleware({
       }
     }
   }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SISTEMA DE CHAT COMPLETO — Session persistence + Multi-provider
+// ═══════════════════════════════════════════════════════════════
+
+// Mapa de sesiones: frontendSessionId → { ocSessionId, model, createdAt }
+const sessionMap = new Map();
+
+// Solicitudes activas (para poder cancelar)
+const activeRequests = new Map();
+
+// ── FREEMODEL API (bridge directo) ────────────────────────────
+const FREEMODEL_KEY = process.env.FREEMODEL_API_KEY || 'fe_oa_db8434da9d092b657e26dba8e2cdbf5cc460848f7e3b490c';
+const FREEMODEL_URL = process.env.FREEMODEL_BASE_URL || 'https://api.freemodel.dev/v1';
+
+function callFreemodel(model, message, systemPrompt) {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify({
+      model,
+      messages: [
+        ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+        { role: 'user', content: message }
+      ],
+      max_tokens: 4096,
+    });
+
+    const url = new URL(`${FREEMODEL_URL}/chat/completions`);
+    const req = https.request({
+      hostname: url.hostname,
+      port: url.port || 443,
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${FREEMODEL_KEY}`,
+        'Content-Length': Buffer.byteLength(payload),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.error) {
+            reject(new Error(parsed.error.message || JSON.stringify(parsed.error)));
+          } else {
+            resolve(parsed.choices?.[0]?.message?.content || '(sin respuesta)');
+          }
+        } catch (e) {
+          reject(new Error('Error parseando respuesta Freemodel'));
+        }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(60000, () => { req.destroy(); reject(new Error('Timeout Freemodel')); });
+    req.write(payload);
+    req.end();
+  });
+}
+
+function ocRequest(path, method, body, timeoutMs = 120000) {
+  return new Promise((resolve, reject) => {
+    const payload = body ? JSON.stringify(body) : '';
+    const req = http.request({
+      hostname: 'localhost',
+      port: OPENCODE_PORT,
+      path,
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => resolve({ status: res.statusCode || 0, data }));
+    });
+    req.on('error', reject);
+    req.setTimeout(timeoutMs, () => { req.destroy(); reject(new Error('Timeout')); });
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
+// Crear o reusar sesión en OpenCode
+async function getOrCreateSession(frontendSessionId) {
+  const existing = sessionMap.get(frontendSessionId);
+  if (existing) {
+    // Verificar que la sesión aún existe en OpenCode
+    try {
+      const check = await ocRequest(`/session/${existing.ocSessionId}`, 'GET', null, 5000);
+      if (check.status === 200) return existing.ocSessionId;
+    } catch {}
+    // Si no existe, eliminar del mapa y crear nueva
+    sessionMap.delete(frontendSessionId);
+  }
+
+  // Crear nueva sesión en OpenCode
+  try {
+    const createRes = await ocRequest('/session', 'POST', {});
+    if (createRes.status === 200 || createRes.status === 201) {
+      const created = JSON.parse(createRes.data);
+      const ocId = created.id || created.sessionID;
+      sessionMap.set(frontendSessionId, { ocSessionId: ocId, createdAt: Date.now() });
+      console.log(`[chat] Sesión mapeada: ${frontendSessionId} → ${ocId}`);
+      return ocId;
+    }
+  } catch (e) {
+    console.error('[chat] Error creando sesión:', e.message);
+  }
+  return frontendSessionId;
+}
+
+// Parsear modelo "provider/modelID" → { providerID, modelID }
+function parseModel(modelStr) {
+  const raw = modelStr || 'opencode/big-pickle';
+  const slashIdx = raw.indexOf('/');
+  if (slashIdx > 0) {
+    return { providerID: raw.substring(0, slashIdx), modelID: raw.substring(slashIdx + 1) };
+  }
+  return { providerID: 'opencode', modelID: raw };
+}
+
+// ── POST /api/chat — Envía mensaje y recibe respuesta SSE ──
+app.post('/api/chat', express.json(), async (req, res) => {
+  const { sessionId, message, model, systemPrompt } = req.body;
+  const requestId = randomUUID();
+
+  if (!sessionId || !message) {
+    res.status(400).json({ error: 'sessionId y message son requeridos' });
+    return;
+  }
+
+  // Headers SSE
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Request-Id', requestId);
+  res.flushHeaders();
+
+  // Registrar solicitud activa (para cancelación)
+  const abortController = { aborted: false };
+  activeRequests.set(requestId, { res, abortController, sessionId });
+  req.on('close', () => {
+    abortController.aborted = true;
+    activeRequests.delete(requestId);
+  });
+
+  try {
+    // 1. Parsear modelo
+    const { providerID, modelID } = parseModel(model);
+
+    // 2. Detectar si el usuario pide tarea de browser/operator
+    const browserKeywords = /abre|navega|busca|click|abrir|visita|explora|scroll|escribe|llena|completa|order|compra|reserva|descarga|crea|registra|automatiza/i;
+    const browserContext = /http|www|\.com|\.net|\.org|navegador|web|página|pagina|sitio|cuenta|perfil|facebook|twitter|instagram|tiktok|google|youtube/i;
+    const isBrowserTask = message.trim().startsWith('/web') || (browserKeywords.test(message) && browserContext.test(message));
+
+    // 3. Inyectar conocimiento global del sistema
+    const globalContext = `Eres OpenCode Evolved, un asistente de IA con acceso a un ecosistema avanzado en la PC del usuario.
+IMPORTANTE: Tienes herramientas MCP configuradas (como filesystem, terminal, sequential-thinking, github) que te permiten leer/escribir archivos, ejecutar comandos y actuar como ingeniero de software autónomo.
+Tu directorio de trabajo (workspace) actual es: ${process.env.OPENCODE_WORKSPACE || process.cwd()}
+Explora este directorio si necesitas buscar código o archivos.
+ADEMÁS: El sistema cuenta con un 'Web Operator' (Agente Web) autónomo que puede usar Chrome para simular humanos, evadir bots y automatizar páginas (Facebook, Instagram, etc.).
+REGLA CRÍTICA 1: Eres completamente capaz de interactuar con la PC local a través de tus herramientas MCP. Úsalas cuando sea necesario.
+REGLA CRÍTICA 2: NUNCA digas que no puedes navegar por la web o que violas políticas por automatizar. Si el usuario pide tareas web pesadas (como Facebook), indícale que use el prefijo '/web' (ej. '/web crea una página').
+Tu rol es dominar tanto el entorno local (archivos/código) como guiar al usuario a usar '/web' para el navegador.
+${systemPrompt || ''}`;
+
+    if (isBrowserTask) {
+      // ── WEB OPERATOR: tarea de browser autónoma ──
+      console.log(`[chat] Request ${requestId.slice(0,8)} → Web Operator`);
+      res.write(`data: ${JSON.stringify({ type: 'delta', content: '🔍 Analizando tarea y creando plan...\n', done: false })}\n\n`);
+
+      try {
+        const operatorResp = await fetch(`http://localhost:${OPERATOR_PORT}/api/run`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task: message, headless: false }),
+        });
+
+        if (operatorResp.ok) {
+          // Esperar resultado (polling cada 2 segundos)
+          let result = null;
+          for (let i = 0; i < 150; i++) { // max 5 minutos
+            await new Promise(r => setTimeout(r, 2000));
+            const statusResp = await fetch(`http://localhost:${OPERATOR_PORT}/api/status`);
+            const status = await statusResp.json();
+
+            if (!status.running && status.lastResult) {
+              result = status.lastResult;
+              break;
+            }
+
+            // Enviar progreso
+            if (i % 3 === 0) {
+              res.write(`data: ${JSON.stringify({ type: 'delta', content: `⏳ Iteración ${i}...\n`, done: false })}\n\n`);
+            }
+          }
+
+          if (result) {
+            fullContent = result.success
+              ? `✅ Tarea completada en ${result.iterations || '?'} iteraciones.\n\n${result.message || ''}\n\n${result.extractedData || result.pageContent || ''}`
+              : `❌ Tarea falló: ${result.message}`;
+          } else {
+            fullContent = '⏰ La tarea tardó demasiado. Intenta con algo más simple.';
+          }
+        } else {
+          fullContent = '⚠️ Web Operator no está disponible. Asegúrate de que esté corriendo en puerto 3001.';
+        }
+      } catch (err) {
+        fullContent = `⚠️ Error al ejecutar tarea de browser: ${err.message}`;
+      }
+
+    } else if (providerID === 'freemodel') {
+      // ── FREEMODEL: llamada directa a la API ──
+      console.log(`[chat] Request ${requestId.slice(0,8)} → Freemodel ${modelID}`);
+      fullContent = await callFreemodel(modelID, message, globalContext);
+    } else {
+      // ── OPENCODE: sesión + mensaje ──
+      const ocSessionId = await getOrCreateSession(sessionId);
+      console.log(`[chat] Request ${requestId.slice(0,8)} → OpenCode ${providerID}/${modelID} session ${ocSessionId}`);
+
+      const promptBody = {
+        parts: [{ type: 'text', text: message + "\n\n" + globalContext }],
+        model: { providerID, modelID },
+        ...(systemPrompt ? { system: systemPrompt } : {}),
+      };
+
+      const promptRes = await ocRequest(`/session/${ocSessionId}/message`, 'POST', promptBody, 180000);
+
+      if (promptRes.status !== 200) {
+        let errMsg = 'Error al enviar mensaje';
+        try {
+          const errData = JSON.parse(promptRes.data);
+          errMsg = errData.error?.data?.message || errData.error?.message || errMsg;
+        } catch { errMsg = promptRes.data?.substring(0, 200) || errMsg; }
+        console.error(`[chat] Error ${promptRes.status}:`, errMsg);
+        res.write(`data: ${JSON.stringify({ type: 'error', content: errMsg, done: true })}\n\n`);
+        res.end();
+        activeRequests.delete(requestId);
+        return;
+      }
+
+      const result = JSON.parse(promptRes.data);
+      if (result.parts && Array.isArray(result.parts)) {
+        for (const part of result.parts) {
+          if (part.type === 'text' && part.text) fullContent += part.text;
+        }
+      }
+    }
+
+    if (!fullContent) fullContent = '(sin respuesta)';
+
+    // 5. Enviar respuesta como streaming simulado (fragmentos progresivos)
+    const CHUNK_SIZE = 3; // caracteres por chunk
+    const DELAY_MS = 10;  // milisegundos entre chunks
+
+    for (let i = 0; i < fullContent.length; i += CHUNK_SIZE) {
+      if (abortController.aborted) break;
+      const chunk = fullContent.slice(0, i + CHUNK_SIZE);
+      res.write(`data: ${JSON.stringify({ type: 'delta', content: chunk, done: false })}\n\n`);
+      await new Promise(r => setTimeout(r, DELAY_MS));
+    }
+
+    // 6. Enviar respuesta final completa
+    res.write(`data: ${JSON.stringify({ type: 'done', content: fullContent, done: true })}\n\n`);
+    res.end();
+    activeRequests.delete(requestId);
+
+    console.log(`[chat] Request ${requestId.slice(0,8)} completado (${fullContent.length} chars)`);
+
+  } catch (err) {
+    console.error('[chat] Error:', err.message);
+    if (!res.destroyed) {
+      res.write(`data: ${JSON.stringify({ type: 'error', content: `Error: ${err.message}`, done: true })}\n\n`);
+      res.end();
+    }
+    activeRequests.delete(requestId);
+  }
+});
+
+// ── POST /api/chat/cancel — Cancela una solicitud activa ──
+app.post('/api/chat/cancel', express.json(), (req, res) => {
+  const { requestId } = req.body;
+  const active = activeRequests.get(requestId);
+  if (active) {
+    active.abortController.aborted = true;
+    active.res.end();
+    activeRequests.delete(requestId);
+    res.json({ ok: true, message: 'Solicitud cancelada' });
+  } else {
+    res.json({ ok: false, message: 'Solicitud no encontrada' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// WEB OPERATOR — Integración con chat
+// ═══════════════════════════════════════════════════════════════
+const OPERATOR_PORT = process.env.OPERATOR_PORT || 3001;
+let operatorWs = null;
+let operatorLogs = [];
+let operatorActive = false;
+
+// Conectar al Web Operator via WebSocket
+function connectOperator() {
+  // Will be connected on demand
+}
+
+// ── POST /api/operator/run — Ejecutar tarea de browser ──
+app.post('/api/operator/run', express.json(), async (req, res) => {
+  const { task, url, headless } = req.body;
+  if (!task) return res.status(400).json({ error: 'task es requerido' });
+
+  try {
+    const resp = await fetch(`http://localhost:${OPERATOR_PORT}/api/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task, url, headless: headless !== false }),
+    });
+    const data = await resp.json();
+    res.json(data);
+  } catch (err) {
+    res.status(503).json({ error: 'Web Operator no disponible', detail: err.message });
+  }
+});
+
+// ── GET /api/operator/status — Estado del operator ──
+app.get('/api/operator/status', async (req, res) => {
+  try {
+    const resp = await fetch(`http://localhost:${OPERATOR_PORT}/api/status`);
+    const data = await resp.json();
+    res.json(data);
+  } catch {
+    res.json({ running: false, task: null, lastResult: null });
+  }
+});
+
+// ── POST /api/operator/cancel — Cancelar tarea ──
+app.post('/api/operator/cancel', async (req, res) => {
+  try {
+    const resp = await fetch(`http://localhost:${OPERATOR_PORT}/api/cancel`, { method: 'POST' });
+    const data = await resp.json();
+    res.json(data);
+  } catch {
+    res.json({ error: 'No disponible' });
+  }
+});
+
+// ── GET /api/operator/screenshot — Último screenshot ──
+app.get('/api/operator/screenshot', async (req, res) => {
+  try {
+    const resp = await fetch(`http://localhost:${OPERATOR_PORT}/api/screenshot`);
+    if (resp.ok) {
+      const buf = Buffer.from(await resp.arrayBuffer());
+      res.writeHead(200, { 'Content-Type': 'image/png', 'Content-Length': buf.length });
+      res.end(buf);
+    } else {
+      res.status(404).json({ error: 'Sin screenshot' });
+    }
+  } catch {
+    res.status(503).json({ error: 'Operator no disponible' });
+  }
+});
+
+// ── GET /api/sessions — Lista sesiones de OpenCode ──
+app.get('/api/sessions', async (req, res) => {
+  try {
+    const result = await ocRequest('/session', 'GET');
+    if (result.status === 200) {
+      const data = JSON.parse(result.data);
+      res.json({ sessions: data.sessions || data || [] });
+    } else {
+      res.json({ sessions: [] });
+    }
+  } catch (err) {
+    res.json({ sessions: [] });
+  }
+});
+
+// ── POST /api/sessions — Crear sesión ──
+app.post('/api/sessions', express.json(), async (req, res) => {
+  try {
+    const result = await ocRequest('/session', 'POST', {});
+    if (result.status === 200 || result.status === 201) {
+      const data = JSON.parse(result.data);
+      res.json(data);
+    } else {
+      res.status(500).json({ error: 'No se pudo crear la sesión' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── DELETE /api/sessions/:id — Eliminar sesión ──
+app.delete('/api/sessions/:id', async (req, res) => {
+  try {
+    const result = await ocRequest(`/session/${req.params.id}`, 'DELETE');
+    // Limpiar del mapa
+    for (const [key, val] of sessionMap.entries()) {
+      if (val.ocSessionId === req.params.id || key === req.params.id) {
+        sessionMap.delete(key);
+      }
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /api/sessions/:id/messages — Historial de mensajes ──
+app.get('/api/sessions/:id/messages', async (req, res) => {
+  try {
+    const result = await ocRequest(`/session/${req.params.id}/message`, 'GET');
+    if (result.status === 200) {
+      const data = JSON.parse(result.data);
+      // Formatear para el frontend
+      const messages = [];
+      if (Array.isArray(data)) {
+        for (const msg of data) {
+          if (msg.info?.role === 'user' || msg.info?.role === 'assistant') {
+            let content = '';
+            if (msg.parts) {
+              for (const part of msg.parts) {
+                if (part.type === 'text' && part.text) content += part.text;
+              }
+            }
+            messages.push({
+              id: msg.info.id,
+              role: msg.info.role,
+              content,
+              model: msg.info.modelID,
+              createdAt: new Date(msg.info.time?.created).toISOString(),
+            });
+          }
+        }
+      }
+      res.json({ messages });
+    } else {
+      res.json({ messages: [] });
+    }
+  } catch (err) {
+    res.json({ messages: [] });
+  }
+});
+
+// ── Modelos endpoint ──
+app.get('/api/models', (req, res) => {
+  res.json({
+    models: [
+      // ── OPENCODE ZEN (GRATUITOS) ──
+      { id: 'opencode/big-pickle', name: 'Big Pickle - Código general', provider: 'OpenCode Zen', caps: ['tools', 'reasoning'] },
+      { id: 'opencode/north-mini-code-free', name: 'North Mini Code - Código rápido', provider: 'OpenCode Zen', caps: ['tools'] },
+      { id: 'opencode/mimo-v2.5-free', name: 'MiMo V2.5 - Vision+Audio', provider: 'OpenCode Zen', caps: ['vision', 'audio', 'tools', 'reasoning'] },
+      { id: 'opencode/nemotron-3-ultra-free', name: 'Nemotron Ultra - 1M contexto', provider: 'OpenCode Zen', caps: ['tools', 'reasoning'], context: 1000000 },
+      { id: 'opencode/hy3-free', name: 'Hy3 - 256K contexto', provider: 'OpenCode Zen', caps: ['tools', 'reasoning'] },
+      { id: 'opencode/deepseek-v4-flash-free', name: 'DeepSeek V4 Flash - Rápido', provider: 'OpenCode Zen', caps: ['tools'] },
+
+      // ── FREEMODEL ($300 crédito gratis) ──
+      { id: 'freemodel/gpt-5.5', name: 'GPT-5.5 - Más capaz', provider: 'Freemodel', caps: ['vision', 'tools', 'reasoning'], credits: '$300 free' },
+      { id: 'freemodel/gpt-5.4', name: 'GPT-5.4 - General potente', provider: 'Freemodel', caps: ['vision', 'tools', 'reasoning'], credits: '$300 free' },
+      { id: 'freemodel/gpt-5.4-mini', name: 'GPT-5.4 Mini - Rápido y barato', provider: 'Freemodel', caps: ['vision', 'tools', 'reasoning'], credits: '$300 free' },
+      { id: 'freemodel/gpt-5.3-codex', name: 'GPT-5.3 Codex - Código', provider: 'Freemodel', caps: ['vision', 'tools', 'reasoning'], credits: '$300 free' },
+    ]
+  });
 });
 
 // ── Bridge para Modelos Freemodel (OpenAI Compatible) ──
@@ -557,6 +1024,8 @@ server.on("upgrade", (req, socket, head) => {
     wss.handleUpgrade(req, socket, head, (ws) => {
       wss.emit('connection', ws, req);
     });
+  } else if (req.url.startsWith('/api')) {
+    apiServerProxy.upgrade(req, socket, head);
   } else {
     wsProxy.upgrade(req, socket, head);
   }

@@ -157,6 +157,78 @@ app.get('/api/data', (req, res) => {
   });
 });
 
+// Chat with AI (non-browser tasks)
+app.post('/api/chat', async (req, res) => {
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: 'Message required' });
+
+  try {
+    // Intentar primero con callBestModel (OpenCode Zen + Copilot)
+    const { callBestModel } = await import('./ai-client.js');
+    const reply = await callBestModel('fast', [
+      { role: 'user', content: message },
+    ], 2048);
+    if (reply) {
+      return res.json({ reply, model: 'ai-agent' });
+    }
+  } catch (e) {
+    console.log(`[Chat] callBestModel falló: ${e.message}`);
+  }
+
+  // Fallback 1: Freemodel API
+  const freeKey = process.env.FREEMODEL_API_KEY;
+  const freeBase = process.env.FREEMODEL_BASE_URL || 'https://api.freemodel.dev/v1';
+  if (freeKey) {
+    try {
+      console.log('[Chat] Fallback: Freemodel API...');
+      const resp = await fetch(`${freeBase}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${freeKey}` },
+        body: JSON.stringify({
+          model: process.env.FREEMODEL_MODEL || 'gpt-4o',
+          max_tokens: 2048,
+          messages: [{ role: 'user', content: message }],
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+      const data = await resp.json();
+      const content = data.choices?.[0]?.message?.content;
+      if (content) {
+        return res.json({ reply: content, model: 'freemodel' });
+      }
+    } catch (e) {
+      console.log(`[Chat] Freemodel falló: ${e.message}`);
+    }
+  }
+
+  // Fallback 2: OpenAI API directa
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (openaiKey) {
+    try {
+      console.log('[Chat] Fallback: OpenAI API...');
+      const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          max_tokens: 2048,
+          messages: [{ role: 'user', content: message }],
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+      const data = await resp.json();
+      const content = data.choices?.[0]?.message?.content;
+      if (content) {
+        return res.json({ reply: content, model: 'openai' });
+      }
+    } catch (e) {
+      console.log(`[Chat] OpenAI falló: ${e.message}`);
+    }
+  }
+
+  res.json({ reply: 'No hay APIs de IA disponibles. Verifica tus API keys en el archivo .env', model: 'none' });
+});
+
 // Cancel task
 app.post('/api/cancel', (req, res) => {
   if (!activeTask) {

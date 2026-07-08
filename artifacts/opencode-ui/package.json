@@ -76,10 +76,16 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.3",
+    "cors": "^2.8.6",
     "drizzle-kit": "^0.31.9",
     "drizzle-orm": "catalog:",
     "express": "^5.2.1",
     "http-proxy-middleware": "^3.0.5",
     "pg": "^8.20.0"
-  }
+  },
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
