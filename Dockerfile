@@ -57,6 +57,9 @@ COPY . .
 # ── web-operator no esta en el workspace, instalar aparte ──────────────────────
 RUN cd /app/web-operator && npm install --omit=dev
 
+# ── Instalar OpenCode CLI (motor del servidor) ─────────────────────────────────
+RUN npm install -g opencode-ai@latest
+
 # ── Script de reset de tokens (por si se necesita dentro del contenedor) ───────
 COPY scripts/reset-opencode.sh /usr/local/bin/reset-opencode
 RUN chmod +x /usr/local/bin/reset-opencode

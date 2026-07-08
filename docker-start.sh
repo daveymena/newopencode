@@ -33,7 +33,7 @@ echo "  → Acceso remoto disponible en http://TU_SERVIDOR:6080/vnc.html"
 # ── 4. OpenCode Engine ────────────────────────────────────────────────────────
 echo "[4/5] Iniciando OpenCode Engine..."
 OPENCODE_PORT=${OPENCODE_PORT:-21294}
-/app/bin/opencode-linux serve --port $OPENCODE_PORT &
+opencode serve --port $OPENCODE_PORT &
 OC_PID=$!
 echo "  → Esperando OpenCode en :$OPENCODE_PORT..."
 for i in $(seq 1 20); do
