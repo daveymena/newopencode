@@ -23,9 +23,9 @@ WORKDIR /app
 # ── Copiar TODO el código ────────────────────────────────────────────────────
 COPY . .
 
-# ── Desactivar workspace de npm para instalar dependencias localmente ────────
-RUN rm -f /app/pnpm-workspace.yaml && \
-    node -e "const p=require('/app/package.json'); delete p.workspaces; delete p.scripts.preinstall; require('fs').writeFileSync('/app/package.json', JSON.stringify(p, null, 2))"
+# ── Reemplazar package.json raíz con versión mínima (sin workspace ni preinstall) ─
+RUN echo '{"name":"app","private":true}' > /app/package.json && \
+    rm -f /app/pnpm-workspace.yaml /app/pnpm-lock.yaml /app/bun.lock
 
 # ── Instalar OpenCode Engine (global) ────────────────────────────────────────
 RUN npm install -g opencode-ai --ignore-scripts 2>/dev/null || true
