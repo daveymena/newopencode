@@ -18,43 +18,30 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# ── Instalar pnpm (requerido por el workspace) ───────────────────────────────
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# ── Instalar OpenCode Engine via npm ──────────────────────────────────────────
-RUN npm install -g opencode-ai@latest 2>/dev/null || \
-    npm install -g opencode-ai || true
-# ── Correr postinstall de opencode-ai (descarga binario) ─────────────────────
-RUN cd /usr/lib/node_modules/opencode-ai && node postinstall.mjs 2>/dev/null || \
-    cd /usr/local/lib/node_modules/opencode-ai && node postinstall.mjs 2>/dev/null || true
-
 WORKDIR /app
-
-# ── Copiar archivos de dependencias primero para mejor caché ──────────────────
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
-COPY artifacts/opencode-ui/package.json ./artifacts/opencode-ui/
-COPY web-operator/package.json ./web-operator/
-
-# ── Instalar dependencias con pnpm (respeta workspaces) ─────────────────────
-RUN pnpm install --frozen-lockfile || pnpm install
-
-# ── Instalar deps de web-operator con npm (aislado de pnpm) ──────────────────
-RUN cd /app/web-operator && npm install --install-links 2>/dev/null || true
-
-# ── Instalar playwright globalmente (fallback para web-operator) ─────────────
-RUN npm install -g playwright 2>/dev/null || true
 
 # ── Copiar TODO el código ────────────────────────────────────────────────────
 COPY . .
 
-# ── Copiar UI pre-compilada si existe (sino proxy usa fallback de OpenCode) ──
+# ── Instalar OpenCode Engine ─────────────────────────────────────────────────
+RUN npm install -g opencode-ai 2>/dev/null || true
+RUN cd /usr/lib/node_modules/opencode-ai 2>/dev/null && node postinstall.mjs 2>/dev/null || \
+    cd /usr/local/lib/node_modules/opencode-ai 2>/dev/null && node postinstall.mjs 2>/dev/null || true
+
+# ── Instalar deps de web-operator con npm ────────────────────────────────────
+RUN cd /app/web-operator && npm install 2>/dev/null || true
+
+# ── Instalar deps de proxy (opencode-ui) con npm ────────────────────────────
+RUN cd /app/artifacts/opencode-ui && npm install 2>/dev/null || true
+
+# ── Instalar Playwright Chromium ─────────────────────────────────────────────
+RUN cd /app/web-operator && npx playwright install chromium --with-deps 2>/dev/null || true
+
+# ── Copiar UI pre-compilada si existe ────────────────────────────────────────
 RUN if [ -d "/app/artifacts/opencode-ui/dist/public" ]; then \
     mkdir -p /app/ui && cp -r /app/artifacts/opencode-ui/dist/public/* /app/ui/; fi
 
-# ── Instalar Playwright Chromium DESPUÉS de instalar playwright via pnpm ──────
-RUN cd /app/web-operator && pnpm exec playwright install chromium --with-deps 2>/dev/null || true
-
-# ── Script de reset ────────────────────────────────────────────────────────────
+# ── Scripts y permisos ───────────────────────────────────────────────────────
 RUN if [ -f /app/scripts/reset-opencode.sh ]; then \
     cp /app/scripts/reset-opencode.sh /usr/local/bin/reset-opencode && \
     chmod +x /usr/local/bin/reset-opencode; fi
