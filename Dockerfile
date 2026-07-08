@@ -23,19 +23,19 @@ WORKDIR /app
 # ── Copiar TODO el código ────────────────────────────────────────────────────
 COPY . .
 
-# ── Instalar OpenCode Engine ─────────────────────────────────────────────────
-RUN npm install -g opencode-ai 2>/dev/null || true
+# ── Instalar OpenCode Engine (global) ────────────────────────────────────────
+RUN npm install -g opencode-ai --ignore-scripts 2>/dev/null || true
 RUN cd /usr/lib/node_modules/opencode-ai 2>/dev/null && node postinstall.mjs 2>/dev/null || \
     cd /usr/local/lib/node_modules/opencode-ai 2>/dev/null && node postinstall.mjs 2>/dev/null || true
 
-# ── Instalar deps de web-operator con npm ────────────────────────────────────
-RUN cd /app/web-operator && npm install 2>/dev/null || true
+# ── Instalar deps de web-operator (--ignore-scripts evita preinstall del root) ─
+RUN cd /app/web-operator && npm install --ignore-scripts 2>/dev/null || true
 
-# ── Instalar deps de proxy (opencode-ui) con npm ────────────────────────────
-RUN cd /app/artifacts/opencode-ui && npm install 2>/dev/null || true
+# ── Instalar deps de proxy (--ignore-scripts evita preinstall del root) ─────
+RUN cd /app/artifacts/opencode-ui && npm install --ignore-scripts 2>/dev/null || true
 
 # ── Instalar Playwright Chromium ─────────────────────────────────────────────
-RUN cd /app/web-operator && npx playwright install chromium --with-deps 2>/dev/null || true
+RUN npx playwright install chromium --with-deps 2>/dev/null || true
 
 # ── Copiar UI pre-compilada si existe ────────────────────────────────────────
 RUN if [ -d "/app/artifacts/opencode-ui/dist/public" ]; then \
