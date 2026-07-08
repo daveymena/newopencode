@@ -21,9 +21,12 @@ RUN apt-get update && apt-get install -y \
 # ── Instalar pnpm (requerido por el workspace) ───────────────────────────────
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# ── Instalar OpenCode Engine via npm (no necesita binario) ────────────────────
-RUN npm install -g opencode-ai@latest --ignore-scripts 2>/dev/null || \
-    npm install -g opencode-ai --ignore-scripts || true
+# ── Instalar OpenCode Engine via npm ──────────────────────────────────────────
+RUN npm install -g opencode-ai@latest 2>/dev/null || \
+    npm install -g opencode-ai || true
+# ── Correr postinstall de opencode-ai (descarga binario) ─────────────────────
+RUN cd /usr/lib/node_modules/opencode-ai && node postinstall.mjs 2>/dev/null || \
+    cd /usr/local/lib/node_modules/opencode-ai && node postinstall.mjs 2>/dev/null || true
 
 WORKDIR /app
 
@@ -34,6 +37,9 @@ COPY web-operator/package.json ./web-operator/
 
 # ── Instalar dependencias con pnpm (respeta workspaces) ─────────────────────
 RUN pnpm install --frozen-lockfile || pnpm install
+
+# ── Instalar deps de web-operator con npm (si pnpm no los resolvió) ──────────
+RUN cd /app/web-operator && npm install --omit=dev 2>/dev/null || true
 
 # ── Copiar TODO el código ────────────────────────────────────────────────────
 COPY . .
