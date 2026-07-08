@@ -46,11 +46,12 @@ RUN ls /app/web-operator/node_modules/playwright/index.mjs 2>/dev/null && echo "
 RUN ls /app/artifacts/opencode-ui/node_modules/express/index.js 2>/dev/null && echo "✓ proxy-express OK" || echo "✗ proxy-express MISSING"
 
 # ── Construir Frontend React ─────────────────────────────────────────────────
-RUN cd /app/artifacts/opencode-ui && npx --yes vite build 2>/dev/null || true
-RUN if [ -d "/app/artifacts/opencode-ui/dist/public" ]; then \
+RUN cd /app/artifacts/opencode-ui && npx --yes vite build 2>&1 || echo "⚠ Vite build falló, ver errores arriba"
+RUN if [ -d "/app/artifacts/opencode-ui/dist/public" ] && [ -f "/app/artifacts/opencode-ui/dist/public/index.html" ]; then \
     mkdir -p /app/ui && cp -r /app/artifacts/opencode-ui/dist/public/* /app/ui/ && \
-    echo "Frontend React compilado y copiado a /app/ui"; else \
-    echo "Frontend React no se pudo compilar, usando fallback de OpenCode"; fi
+    echo "✓ Frontend React compilado y copiado a /app/ui ($(ls /app/ui | wc -l) archivos)"; else \
+    echo "✗ Frontend React NO se compiló - usando fallback de OpenCode"; \
+    ls -la /app/artifacts/opencode-ui/dist/ 2>/dev/null || echo "  (directorio dist/ no existe)"; fi
 
 # ── Instalar Playwright Chromium ─────────────────────────────────────────────
 RUN npx playwright install chromium --with-deps 2>/dev/null || true
@@ -67,6 +68,6 @@ EXPOSE 80 21293 3001 21294 6080
 VOLUME ["/app/.chrome-session", "/app/web-operator/.site-memory", "/root/.config/opencode"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -sf http://localhost:21293/api/health || exit 1
+    CMD curl -sf http://localhost:21293/health || exit 1
 
 CMD ["/app/docker-start.sh"]

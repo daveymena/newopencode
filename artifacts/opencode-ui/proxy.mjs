@@ -43,7 +43,8 @@ app.get("/health", (req, res) => res.json({ status: "ok", proxy: true, timestamp
 // ── React App (frontend compilado) ─────────────────────────
 const UI_DIR = '/app/ui';
 const UI_INDEX = '/app/ui/index.html';
-if (existsSync(UI_DIR)) {
+const reactAvailable = existsSync(UI_DIR) && existsSync(UI_INDEX);
+if (reactAvailable) {
   app.use(express.static(UI_DIR, { index: false }));
   // SPA catch-all: servir index.html para rutas que no son API ni archivos estáticos
   app.get('*', (req, res) => {
@@ -53,7 +54,7 @@ if (existsSync(UI_DIR)) {
   });
   console.log('[proxy] ✓ Sirviendo React app desde /app/ui/');
 } else {
-  console.log('[proxy] ⚠ React app no encontrada en /app/ui/ — usando OpenCode UI');
+  console.log('[proxy] ⚠ React app no encontrada en /app/ui/ — usando fallback');
 }
 
 // ── Static shell files (CSS + JS personalizado) ──────────────
@@ -971,6 +972,130 @@ const freemodelBridge = createProxyMiddleware({
 });
 app.use('/api/bridge/v1', freemodelBridge);
 
+// ═══════════════════════════════════════════════════════════════
+// DIAGNOSTIC PAGE — Muestra estado de todos los servicios
+// ═══════════════════════════════════════════════════════════════
+app.get('/diag', async (req, res) => {
+  const checks = {};
+
+  // Check React frontend
+  checks.reactFrontend = {
+    status: reactAvailable ? 'ok' : 'missing',
+    detail: reactAvailable ? 'Frontend React compilado en /app/ui/' : 'Frontend NO compilado - ejecuta: cd artifacts/opencode-ui && npx vite build'
+  };
+
+  // Check OpenCode Engine
+  try {
+    const ocCheck = await fetch(`http://localhost:${OPENCODE_PORT}/api/health`, { signal: AbortSignal.timeout(3000) });
+    checks.openCodeEngine = { status: ocCheck.ok ? 'ok' : 'error', detail: `Puerto ${OPENCODE_PORT}` };
+  } catch (e) {
+    checks.openCodeEngine = { status: 'down', detail: `Puerto ${OPENCODE_PORT} no responde - ${e.message}` };
+  }
+
+  // Check Web Operator
+  try {
+    const opCheck = await fetch(`http://localhost:${API_SERVER_PORT}/api/health`, { signal: AbortSignal.timeout(3000) });
+    checks.webOperator = { status: opCheck.ok ? 'ok' : 'error', detail: `Puerto ${API_SERVER_PORT}` };
+  } catch (e) {
+    checks.webOperator = { status: 'down', detail: `Puerto ${API_SERVER_PORT} no responde - ${e.message}` };
+  }
+
+  const allOk = Object.values(checks).every(c => c.status === 'ok');
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenCode - Diagnóstico</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0f; color: #e0e0ff; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .container { background: rgba(255,255,255,0.03); border: 1px solid rgba(124,58,237,0.2); border-radius: 16px; padding: 2.5rem; max-width: 500px; width: 90%; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.3rem; }
+    .badge { display: inline-block; font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; color: #8b5cf6; background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3); border-radius: 4px; padding: 2px 8px; text-transform: uppercase; margin-bottom: 1.5rem; }
+    .check { display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 1rem; margin-bottom: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+    .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .dot.ok { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.5); }
+    .dot.down, .dot.error { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.5); }
+    .dot.missing { background: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.5); }
+    .check-info { flex: 1; }
+    .check-name { font-weight: 600; font-size: 0.9rem; }
+    .check-detail { font-size: 0.75rem; color: rgba(200,200,230,0.5); margin-top: 2px; }
+    .summary { margin-top: 1.2rem; padding: 1rem; border-radius: 8px; font-size: 0.85rem; line-height: 1.5; }
+    .summary.ok { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); color: #86efac; }
+    .summary.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; }
+    code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
+    .links { margin-top: 1.2rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .links a { color: #8b5cf6; text-decoration: none; font-size: 0.85rem; padding: 6px 12px; border: 1px solid rgba(124,58,237,0.3); border-radius: 6px; transition: all 0.2s; }
+    .links a:hover { background: rgba(124,58,237,0.15); }
+    .env-section { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05); }
+    .env-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(200,200,230,0.4); margin-bottom: 0.5rem; }
+    .env-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.3rem 0; }
+    .env-key { color: rgba(200,200,230,0.6); }
+    .env-val { color: #8b5cf6; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>OpenCode</h1>
+    <div class="badge">DIAGNÓSTICO</div>
+
+    <div class="check">
+      <div class="dot ${checks.reactFrontend.status}"></div>
+      <div class="check-info">
+        <div class="check-name">Frontend React</div>
+        <div class="check-detail">${checks.reactFrontend.detail}</div>
+      </div>
+    </div>
+
+    <div class="check">
+      <div class="dot ${checks.openCodeEngine.status}"></div>
+      <div class="check-info">
+        <div class="check-name">OpenCode Engine</div>
+        <div class="check-detail">${checks.openCodeEngine.detail}</div>
+      </div>
+    </div>
+
+    <div class="check">
+      <div class="dot ${checks.webOperator.status}"></div>
+      <div class="check-info">
+        <div class="check-name">Web Operator</div>
+        <div class="check-detail">${checks.webOperator.detail}</div>
+      </div>
+    </div>
+
+    ${allOk ? `
+    <div class="summary ok">
+      Todos los servicios funcionando correctamente.<br>
+      <a href="/" style="color:#86efac;text-decoration:underline;">Ir a la interfaz →</a>
+    </div>` : `
+    <div class="summary error">
+      <strong>Algunos servicios no están disponibles.</strong><br><br>
+      ${checks.reactFrontend.status !== 'ok' ? `• Para compilar el frontend: <code>cd /app/artifacts/opencode-ui && npx vite build</code><br>` : ''}
+      ${checks.openCodeEngine.status !== 'ok' ? `• OpenCode Engine no está corriendo en puerto ${OPENCODE_PORT}<br>` : ''}
+      ${checks.webOperator.status !== 'ok' ? `• Web Operator no está corriendo en puerto ${API_SERVER_PORT}<br>` : ''}
+    </div>`}
+
+    <div class="links">
+      <a href="/diag">🔄 Re-verificar</a>
+      <a href="/health">💚 Health</a>
+      <a href="/colmena">🐝 Colmena</a>
+    </div>
+
+    <div class="env-section">
+      <div class="env-title">Puertos</div>
+      <div class="env-row"><span class="env-key">Proxy (este)</span><span class="env-val">${PORT}</span></div>
+      <div class="env-row"><span class="env-key">OpenCode</span><span class="env-val">${OPENCODE_PORT}</span></div>
+      <div class="env-row"><span class="env-key">Web Operator</span><span class="env-val">${API_SERVER_PORT}</span></div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  res.send(html);
+});
+
 app.use((req, res, next) => {
   const isApi = req.url.startsWith('/api');
   const acceptsHtml = req.headers.accept?.includes('text/html');
@@ -981,11 +1106,11 @@ app.use((req, res, next) => {
     apiServerProxy(req, res, next);
   } else if (acceptsHtml || (!isApi && !req.url.includes('.'))) {
     // Rutas de la SPA React (sin extensión de archivo = ruta de cliente)
-    if (existsSync(UI_INDEX)) {
+    if (reactAvailable) {
       res.sendFile(UI_INDEX);
     } else {
-      // Fallback al UI de OpenCode si no está compilado el frontend
-      htmlProxy(req, res, next);
+      // Fallback: redirigir a diagnóstico si el frontend no está compilado
+      res.redirect('/diag');
     }
   } else {
     // Assets estáticos no encontrados, ficheros JS/CSS → OpenCode proxy

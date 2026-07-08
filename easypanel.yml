@@ -18,8 +18,13 @@ services:
       PORT: "21293"
       OPENCODE_WORKSPACE: /workspace
       OPENCODE_SERVER_PASSWORD: "6715320Dvd."
-    ports:
-      - "21293:21293"
+      # Puertos internos (OpenCode engine + Web Operator)
+      OPENCODE_PORT: "21294"
+      OPERATOR_PORT: "3001"
+      API_SERVER_PORT: "3001"
+      NODE_ENV: "production"
+      TZ: "America/Bogota"
+      DISPLAY: ":99"
       # PostgreSQL — Credenciales del servicio en EasyPanel
       # Hostname interno (dentro de EasyPanel): tecnoia_tecnologi
       # Hostname externo: 144.91.112.79
@@ -50,8 +55,18 @@ services:
       MISTRAL_API_KEY: ""
       XAI_API_KEY: ""
 
+      # ---- Freemodel (para Web Operator) ----
+      FREEMODEL_API_KEY: "fe_oa_db8434da9d092b657e26dba8e2cdbf5cc460848f7e3b490c"
+      FREEMODEL_BASE_URL: "https://api.freemodel.dev/v1"
+      FREEMODEL_MODEL: "gpt-4o"
+
+      # ---- Puter.js ----
+      PUTER_AUTH_TOKEN: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0IjoiZ3VpIiwidiI6IjAuMC4wIiwidSI6ImRDdjMrQURQU1BldFk0Z09JLyt3Umc9PSIsInV1Ijoic0VDNE5SZi9Ra3FBYWlIZ1FsTWNWZz09IiwiaWF0IjoxNzc4ODYyMDk2fQ.OA-DQOWYxuE0tSxhR4Egl2x50KSgYyPeu-HjT-JqSrs"
+
       # ---- Ollama (local en el mismo servidor) ----
       OLLAMA_HOST: ""
+    ports:
+      - "21293:21293"
 
     mounts:
       # Proyectos y workspace
@@ -66,24 +81,6 @@ services:
       - type: volume
         name: opencode-config
         mountPath: /root/.config/opencode
-
-  # ---- Web Operator Agent (clon de ChatGPT Operator) ----
-  web-operator:
-    type: app
-    build:
-      type: dockerfile
-      file: web-operator/Dockerfile
-    env:
-      PORT: "3001"
-      FREEMODEL_API_KEY: "fe_oa_db8434da9d092b657e26dba8e2cdbf5cc460848f7e3b490c"
-      FREEMODEL_BASE_URL: "https://api.freemodel.dev/v1"
-      FREEMODEL_MODEL: "gpt-4o"
-      PUTER_AUTH_TOKEN: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0IjoiZ3VpIiwidiI6IjAuMC4wIiwidSI6ImRDdjMrQURQU1BldFk0Z09JLyt3Umc9PSIsInV1Ijoic0VDNE5SZi9Ra3FBYWlIZ1FsTWNWZz09IiwiaWF0IjoxNzc4ODYyMDk2fQ.OA-DQOWYxuE0tSxhR4Egl2x50KSgYyPeu-HjT-JqSrs"
-    ports:
-      - "3001"
-    resources:
-      memoryLimit: 1024
-      cpuLimit: 1
 
   # ---- Ollama (opcional, para modelos locales gratuitos) ----
   # Para activarlo, descomenta este bloque y actualiza OLLAMA_HOST arriba
