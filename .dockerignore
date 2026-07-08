@@ -1,4 +1,3 @@
-node_modules/
 **/node_modules/
 .chrome-session/
 *.log
@@ -9,6 +8,8 @@ dist/
 database.sqlite
 bin/opencode-windows-x64.zip
 bin/opencode-win/
+bin/opencode.exe
 *.png
 *.jpg
 scratch/
+.git/
