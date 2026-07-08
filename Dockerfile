@@ -38,6 +38,11 @@ RUN pnpm install --frozen-lockfile || pnpm install
 # ── Copiar TODO el código ────────────────────────────────────────────────────
 COPY . .
 
+# ── Construir Frontend React ──────────────────────────────────────────────────
+RUN cd /app/artifacts/opencode-ui && npx vite build && \
+    mkdir -p /app/ui && \
+    cp -r dist/public/* /app/ui/
+
 # ── Instalar Playwright Chromium DESPUÉS de instalar playwright via npm ────────
 RUN cd /app/web-operator && npx playwright install chromium --with-deps 2>/dev/null || true
 
