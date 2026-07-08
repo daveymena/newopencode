@@ -54,6 +54,9 @@ RUN pnpm install --no-frozen-lockfile --prod --ignore-scripts
 # ── Copiar resto del proyecto ──────────────────────────────────────────────────
 COPY . .
 
+# ── web-operator no esta en el workspace, instalar aparte ──────────────────────
+RUN cd /app/web-operator && npm install --omit=dev
+
 # ── Script de reset de tokens (por si se necesita dentro del contenedor) ───────
 COPY scripts/reset-opencode.sh /usr/local/bin/reset-opencode
 RUN chmod +x /usr/local/bin/reset-opencode
