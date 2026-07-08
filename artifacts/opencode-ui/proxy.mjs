@@ -45,6 +45,12 @@ const UI_DIR = '/app/ui';
 const UI_INDEX = '/app/ui/index.html';
 if (existsSync(UI_DIR)) {
   app.use(express.static(UI_DIR, { index: false }));
+  // SPA catch-all: servir index.html para rutas que no son API ni archivos estáticos
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api') && !req.path.startsWith('/__') && !req.path.startsWith('/port')) {
+      res.sendFile(UI_INDEX);
+    }
+  });
   console.log('[proxy] ✓ Sirviendo React app desde /app/ui/');
 } else {
   console.log('[proxy] ⚠ React app no encontrada en /app/ui/ — usando OpenCode UI');
