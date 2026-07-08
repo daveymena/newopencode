@@ -33,10 +33,17 @@ RUN cd /usr/lib/node_modules/opencode-ai 2>/dev/null && node postinstall.mjs 2>/
     cd /usr/local/lib/node_modules/opencode-ai 2>/dev/null && node postinstall.mjs 2>/dev/null || true
 
 # ── Instalar deps de web-operator ────────────────────────────────────────────
-RUN cd /app/web-operator && npm install 2>/dev/null || true
+RUN cd /app/web-operator && npm install
+# ── Asegurar que playwright esté accesible localmente ───────────────────────
+RUN cd /app/web-operator && npm install playwright --no-save
 
 # ── Instalar deps de proxy + frontend ────────────────────────────────────────
-RUN cd /app/artifacts/opencode-ui && npm install 2>/dev/null || true
+RUN cd /app/artifacts/opencode-ui && npm install
+
+# ── Verificar dependencias críticas ──────────────────────────────────────────
+RUN ls /app/web-operator/node_modules/express/index.js 2>/dev/null && echo "✓ express OK" || echo "✗ express MISSING"
+RUN ls /app/web-operator/node_modules/playwright/index.mjs 2>/dev/null && echo "✓ playwright OK" || echo "✗ playwright MISSING"
+RUN ls /app/artifacts/opencode-ui/node_modules/express/index.js 2>/dev/null && echo "✓ proxy-express OK" || echo "✗ proxy-express MISSING"
 
 # ── Construir Frontend React ─────────────────────────────────────────────────
 RUN cd /app/artifacts/opencode-ui && npx --yes vite build 2>/dev/null || true
