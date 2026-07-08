@@ -18,18 +18,25 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
+# ── Instalar pnpm (requerido por el workspace) ───────────────────────────────
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # ── Instalar OpenCode Engine via npm (no necesita binario) ────────────────────
 RUN npm install -g opencode-ai@latest --ignore-scripts 2>/dev/null || \
     npm install -g opencode-ai --ignore-scripts || true
 
 WORKDIR /app
 
-# ── Copiar TODO el código primero ─────────────────────────────────────────────
-COPY . .
+# ── Copiar archivos de dependencias primero para mejor caché ──────────────────
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY artifacts/opencode-ui/package.json ./artifacts/opencode-ui/
+COPY web-operator/package.json ./web-operator/
 
-# ── Instalar deps DESPUÉS del COPY (orden correcto, sin problemas de caché) ───
-RUN cd /app/web-operator && npm install
-RUN cd /app/artifacts/opencode-ui && npm install
+# ── Instalar dependencias con pnpm (respeta workspaces) ─────────────────────
+RUN pnpm install --frozen-lockfile || pnpm install
+
+# ── Copiar TODO el código ────────────────────────────────────────────────────
+COPY . .
 
 # ── Instalar Playwright Chromium DESPUÉS de instalar playwright via npm ────────
 RUN cd /app/web-operator && npx playwright install chromium --with-deps 2>/dev/null || true
