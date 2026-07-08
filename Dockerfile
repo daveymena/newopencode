@@ -62,7 +62,7 @@ RUN if [ -f /app/scripts/reset-opencode.sh ]; then \
 
 RUN chmod +x /app/docker-start.sh
 
-EXPOSE 21293 3001 21294 6080
+EXPOSE 80 21293 3001 21294 6080
 
 VOLUME ["/app/.chrome-session", "/app/web-operator/.site-memory", "/root/.config/opencode"]
 

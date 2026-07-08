@@ -1041,3 +1041,22 @@ server.listen(PORT, () => {
   console.log(`[proxy] Proxy UI escuchando en puerto ${PORT}`);
   console.log(`  → Proxying a OpenCode en http://localhost:${OPENCODE_PORT}`);
 });
+
+// También escuchar en puerto 80 para EasyPanel
+if (PORT !== 80) {
+  const server80 = createServer(app);
+  server80.on('upgrade', (req, socket, head) => {
+    if (req.url === '/agent') {
+      wss.handleUpgrade(req, socket, head, (ws) => {
+        wss.emit('connection', ws, req);
+      });
+    } else if (req.url.startsWith('/api')) {
+      apiServerProxy.upgrade(req, socket, head);
+    } else {
+      wsProxy.upgrade(req, socket, head);
+    }
+  });
+  server80.listen(80, () => {
+    console.log(`[proxy] Proxy UI también escuchando en puerto 80`);
+  });
+}
