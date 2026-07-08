@@ -28,18 +28,21 @@ RUN npm install -g opencode-ai --ignore-scripts 2>/dev/null || true
 RUN cd /usr/lib/node_modules/opencode-ai 2>/dev/null && node postinstall.mjs 2>/dev/null || \
     cd /usr/local/lib/node_modules/opencode-ai 2>/dev/null && node postinstall.mjs 2>/dev/null || true
 
-# ── Instalar deps de web-operator (--ignore-scripts evita preinstall del root) ─
+# ── Instalar deps de web-operator ────────────────────────────────────────────
 RUN cd /app/web-operator && npm install --ignore-scripts 2>/dev/null || true
 
-# ── Instalar deps de proxy (--ignore-scripts evita preinstall del root) ─────
+# ── Instalar deps de proxy + frontend ────────────────────────────────────────
 RUN cd /app/artifacts/opencode-ui && npm install --ignore-scripts 2>/dev/null || true
+
+# ── Construir Frontend React ─────────────────────────────────────────────────
+RUN cd /app/artifacts/opencode-ui && npx --yes vite build 2>/dev/null || true
+RUN if [ -d "/app/artifacts/opencode-ui/dist/public" ]; then \
+    mkdir -p /app/ui && cp -r /app/artifacts/opencode-ui/dist/public/* /app/ui/ && \
+    echo "Frontend React compilado y copiado a /app/ui"; else \
+    echo "Frontend React no se pudo compilar, usando fallback de OpenCode"; fi
 
 # ── Instalar Playwright Chromium ─────────────────────────────────────────────
 RUN npx playwright install chromium --with-deps 2>/dev/null || true
-
-# ── Copiar UI pre-compilada si existe ────────────────────────────────────────
-RUN if [ -d "/app/artifacts/opencode-ui/dist/public" ]; then \
-    mkdir -p /app/ui && cp -r /app/artifacts/opencode-ui/dist/public/* /app/ui/; fi
 
 # ── Scripts y permisos ───────────────────────────────────────────────────────
 RUN if [ -f /app/scripts/reset-opencode.sh ]; then \
