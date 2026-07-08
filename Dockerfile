@@ -24,18 +24,32 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
+# ── Instalar pnpm (necesario para el workspace con catalog:) ─────────────────
+RUN npm install -g pnpm
+
 # ── Instalar Chromium via Playwright ──────────────────────────────────────────
 RUN npx -y playwright install chromium --with-deps 2>/dev/null || true
 
 # ── Directorio de trabajo ──────────────────────────────────────────────────────
 WORKDIR /app
 
-# ── Instalar dependencias Node (proxy + web-operator) ─────────────────────────
-COPY artifacts/opencode-ui/package.json /app/artifacts/opencode-ui/
-RUN cd /app/artifacts/opencode-ui && npm install --omit=dev
+# ── Copiar config del workspace (para resolver catalog: y workspace:*) ─────────
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml /app/
 
+# ── Copiar todos los package.json del workspace ────────────────────────────────
+COPY artifacts/opencode-ui/package.json /app/artifacts/opencode-ui/
+COPY artifacts/api-server/package.json /app/artifacts/api-server/
+COPY artifacts/mockup-sandbox/package.json /app/artifacts/mockup-sandbox/
+COPY lib/api-client-react/package.json /app/lib/api-client-react/
+COPY lib/api-spec/package.json /app/lib/api-spec/
+COPY lib/api-zod/package.json /app/lib/api-zod/
+COPY lib/db/package.json /app/lib/db/
+COPY lib/integrations-anthropic-ai/package.json /app/lib/integrations-anthropic-ai/
+COPY scripts/package.json /app/scripts/
 COPY web-operator/package.json /app/web-operator/
-RUN cd /app/web-operator && npm install --omit=dev
+
+# ── Instalar dependencias de produccion con pnpm ───────────────────────────────
+RUN pnpm install --frozen-lockfile --prod
 
 # ── Copiar resto del proyecto ──────────────────────────────────────────────────
 COPY . .
@@ -51,7 +65,7 @@ RUN chmod +x /app/docker-start.sh
 # ── Puertos: Web UI, Web Operator, OpenCode Engine, noVNC (pantalla remota) ───
 EXPOSE 21293 3001 21294 6080
 
-# ── Volúmenes persistentes ─────────────────────────────────────────────────────
+# ── Volumenes persistentes ──────────────────────────────────────────────────────
 VOLUME ["/app/.chrome-session", "/app/web-operator/.site-memory", "/root/.config/opencode"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
