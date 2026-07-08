@@ -38,8 +38,8 @@ COPY web-operator/package.json ./web-operator/
 # ── Instalar dependencias con pnpm (respeta workspaces) ─────────────────────
 RUN pnpm install --frozen-lockfile || pnpm install
 
-# ── Instalar deps de web-operator con npm (si pnpm no los resolvió) ──────────
-RUN cd /app/web-operator && npm install --omit=dev 2>/dev/null || true
+# ── Instalar deps de web-operator con npm ─────────────────────────────────────
+RUN cd /app/web-operator && npm install 2>/dev/null || true
 
 # ── Copiar TODO el código ────────────────────────────────────────────────────
 COPY . .
