@@ -23,16 +23,20 @@ WORKDIR /app
 # ── Copiar TODO el código ────────────────────────────────────────────────────
 COPY . .
 
+# ── Desactivar workspace de npm para instalar dependencias localmente ────────
+RUN rm -f /app/pnpm-workspace.yaml && \
+    node -e "const p=require('/app/package.json'); delete p.workspaces; delete p.scripts.preinstall; require('fs').writeFileSync('/app/package.json', JSON.stringify(p, null, 2))"
+
 # ── Instalar OpenCode Engine (global) ────────────────────────────────────────
 RUN npm install -g opencode-ai --ignore-scripts 2>/dev/null || true
 RUN cd /usr/lib/node_modules/opencode-ai 2>/dev/null && node postinstall.mjs 2>/dev/null || \
     cd /usr/local/lib/node_modules/opencode-ai 2>/dev/null && node postinstall.mjs 2>/dev/null || true
 
 # ── Instalar deps de web-operator ────────────────────────────────────────────
-RUN cd /app/web-operator && npm install --ignore-scripts 2>/dev/null || true
+RUN cd /app/web-operator && npm install 2>/dev/null || true
 
 # ── Instalar deps de proxy + frontend ────────────────────────────────────────
-RUN cd /app/artifacts/opencode-ui && npm install --ignore-scripts 2>/dev/null || true
+RUN cd /app/artifacts/opencode-ui && npm install 2>/dev/null || true
 
 # ── Construir Frontend React ─────────────────────────────────────────────────
 RUN cd /app/artifacts/opencode-ui && npx --yes vite build 2>/dev/null || true
