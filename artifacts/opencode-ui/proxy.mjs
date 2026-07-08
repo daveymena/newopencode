@@ -1109,8 +1109,8 @@ app.use((req, res, next) => {
     if (reactAvailable) {
       res.sendFile(UI_INDEX);
     } else {
-      // Fallback: redirigir a diagnóstico si el frontend no está compilado
-      res.redirect('/diag');
+      // Fallback al UI de OpenCode si no está compilado el frontend
+      htmlProxy(req, res, next);
     }
   } else {
     // Assets estáticos no encontrados, ficheros JS/CSS → OpenCode proxy
