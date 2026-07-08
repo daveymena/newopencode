@@ -62,11 +62,11 @@ RUN if [ -f /app/scripts/reset-opencode.sh ]; then \
 
 RUN chmod +x /app/docker-start.sh
 
-EXPOSE 80 3001 21294 6080
+EXPOSE 21293 3001 21294 6080
 
 VOLUME ["/app/.chrome-session", "/app/web-operator/.site-memory", "/root/.config/opencode"]
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -sf http://localhost:80/api/health || exit 1
+    CMD curl -sf http://localhost:21293/api/health || exit 1
 
 CMD ["/app/docker-start.sh"]
