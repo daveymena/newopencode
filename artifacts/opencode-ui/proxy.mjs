@@ -12,7 +12,7 @@ import { existsSync } from "fs";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PORT            = parseInt(process.env.PORT || "21293");
-const OPENCODE_PORT   = parseInt(process.env.OPENCODE_INTERNAL_PORT || "21294");
+const OPENCODE_PORT   = parseInt(process.env.OPENCODE_PORT || process.env.OPENCODE_INTERNAL_PORT || "21294");
 const OPENCODE_TARGET = `http://localhost:${OPENCODE_PORT}`;
 
 const API_SERVER_PORT = parseInt(process.env.API_SERVER_PORT || "21296");
