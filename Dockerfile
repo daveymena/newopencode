@@ -1,209 +1,60 @@
-# ============================================================
-# OpenCode - Imagen Docker completa
-# Soporta: Node.js, Python, Go, Rust, Java, Ruby, PHP,
-#          .NET, Deno, Bun, C/C++, Bash y más
-# Para EasyPanel / Docker / Servidor local
-# ============================================================
+FROM node:22-slim
 
-FROM ubuntu:24.04
-
-# Evitar prompts interactivos durante la instalación
+# ── Variables de entorno base ──────────────────────────────────────────────────
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=UTC
+ENV TZ=America/Bogota
+ENV NODE_ENV=production
+ENV DISPLAY=:99
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
-# ---- Herramientas base ---- #
+# ── Dependencias del sistema (Chrome, Xvfb, VNC, noVNC) ───────────────────────
 RUN apt-get update && apt-get install -y \
-    # Herramientas esenciales
-    curl wget git unzip zip tar gzip \
-    build-essential gcc g++ make cmake \
-    # Para SSL/TLS
-    ca-certificates gnupg \
-    # Útiles
-    jq tree htop nano vim less \
-    # Para lenguajes
-    libssl-dev libffi-dev zlib1g-dev \
-    pkg-config libbz2-dev libreadline-dev \
-    libsqlite3-dev libncurses5-dev \
-    # Para Java
-    fontconfig \
+    # Chrome / Chromium deps
+    ca-certificates curl gnupg wget \
+    libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+    libgbm1 libasound2 libxkbcommon0 libxcomposite1 libxdamage1 \
+    libxfixes3 libxrandr2 libpango-1.0-0 libcairo2 libx11-6 libx11-xcb1 \
+    libxcb1 libxext6 libxss1 libxtst6 libxcb-dri3-0 fonts-liberation \
+    fonts-ipafont-gothic fonts-wqy-zenhei \
+    # Xvfb (pantalla virtual) + x11vnc + noVNC
+    xvfb x11vnc novnc websockify \
+    # Utilidades
+    procps netcat-openbsd tzdata \
+    --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# ============================================================
-# NODE.JS 22 (LTS)
-# ============================================================
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g npm@latest \
-    && npm install -g pnpm yarn \
-    && rm -rf /var/lib/apt/lists/*
+# ── Instalar Chromium via Playwright ──────────────────────────────────────────
+RUN npx -y playwright install chromium --with-deps 2>/dev/null || true
 
-# ============================================================
-# BUN (Runtime JS/TS ultrarrápido - requerido por OpenCode)
-# ============================================================
-RUN curl -fsSL https://bun.sh/install | bash \
-    && cp /root/.bun/bin/bun /usr/local/bin/bun \
-    && ln -sf /usr/local/bin/bun /usr/local/bin/bunx
+# ── Directorio de trabajo ──────────────────────────────────────────────────────
+WORKDIR /app
 
-# ============================================================
-# PYTHON 3.12 + pip + uv + poetry
-# ============================================================
-RUN apt-get update && apt-get install -y \
-    python3 python3-dev python3-venv python3-pip \
-    && pip3 install --no-cache-dir --break-system-packages uv poetry \
-    && rm -rf /var/lib/apt/lists/*
+# ── Instalar dependencias Node (proxy + web-operator) ─────────────────────────
+COPY artifacts/opencode-ui/package.json /app/artifacts/opencode-ui/
+RUN cd /app/artifacts/opencode-ui && npm install --omit=dev
 
-# ============================================================
-# GO 1.23
-# ============================================================
-RUN curl -fsSL https://go.dev/dl/go1.23.4.linux-amd64.tar.gz -o /tmp/go.tar.gz \
-    && tar -C /usr/local -xzf /tmp/go.tar.gz \
-    && rm /tmp/go.tar.gz
-ENV PATH="/usr/local/go/bin:${PATH}"
-ENV GOPATH="/root/go"
-ENV PATH="${GOPATH}/bin:${PATH}"
+COPY web-operator/package.json /app/web-operator/
+RUN cd /app/web-operator && npm install --omit=dev
 
-# ============================================================
-# RUST + CARGO (via rustup)
-# ============================================================
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --no-modify-path --profile minimal
-ENV PATH="/root/.cargo/bin:${PATH}"
+# ── Copiar resto del proyecto ──────────────────────────────────────────────────
+COPY . .
 
-# ============================================================
-# JAVA 21 (JDK) + Maven + Gradle
-# ============================================================
-RUN apt-get update && apt-get install -y \
-    openjdk-21-jdk maven \
-    && rm -rf /var/lib/apt/lists/*
-ENV JAVA_HOME="/usr/lib/jvm/java-21-openjdk-amd64"
-ENV PATH="${JAVA_HOME}/bin:${PATH}"
+# ── Script de reset de tokens (por si se necesita dentro del contenedor) ───────
+COPY scripts/reset-opencode.sh /usr/local/bin/reset-opencode
+RUN chmod +x /usr/local/bin/reset-opencode
 
-# Gradle
-RUN curl -fsSL https://services.gradle.org/distributions/gradle-8.11.1-bin.zip -o /tmp/gradle.zip \
-    && unzip -d /opt /tmp/gradle.zip \
-    && mv /opt/gradle-8.11.1 /opt/gradle \
-    && rm /tmp/gradle.zip
-ENV PATH="/opt/gradle/bin:${PATH}"
+# ── Script de inicio (Xvfb + noVNC + servicios) ───────────────────────────────
+COPY docker-start.sh /app/docker-start.sh
+RUN chmod +x /app/docker-start.sh
 
-# ============================================================
-# RUBY 3.3
-# ============================================================
-RUN apt-get update && apt-get install -y \
-    ruby ruby-dev ruby-bundler \
-    && gem install rails --no-document \
-    && rm -rf /var/lib/apt/lists/*
+# ── Puertos: Web UI, Web Operator, OpenCode Engine, noVNC (pantalla remota) ───
+EXPOSE 21293 3001 21294 6080
 
-# ============================================================
-# PHP 8.3 + Composer
-# ============================================================
-RUN apt-get update && apt-get install -y \
-    php8.3 php8.3-cli php8.3-common \
-    php8.3-curl php8.3-mbstring php8.3-xml \
-    php8.3-zip php8.3-pgsql php8.3-mysql \
-    && rm -rf /var/lib/apt/lists/*
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# ── Volúmenes persistentes ─────────────────────────────────────────────────────
+VOLUME ["/app/.chrome-session", "/app/web-operator/.site-memory", "/root/.config/opencode"]
 
-# ============================================================
-# .NET 8 SDK
-# ============================================================
-RUN curl -fsSL https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -o /tmp/packages-microsoft-prod.deb \
-    && dpkg -i /tmp/packages-microsoft-prod.deb \
-    && rm /tmp/packages-microsoft-prod.deb \
-    && apt-get update \
-    && apt-get install -y dotnet-sdk-8.0 \
-    && rm -rf /var/lib/apt/lists/*
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD curl -sf http://localhost:21293/api/health || exit 1
 
-# ============================================================
-# DENO
-# ============================================================
-RUN curl -fsSL https://deno.land/install.sh | sh \
-    && cp /root/.deno/bin/deno /usr/local/bin/deno
-
-# ============================================================
-# OPENCODE (binario oficial de SST)
-# ============================================================
-# Descargar OpenCode CLI oficial
-ARG OPENCODE_VERSION=1.17.0
-RUN curl -fsSL "https://github.com/anomalyco/opencode/releases/download/v${OPENCODE_VERSION}/opencode-linux-x64.tar.gz" \
-    -o /tmp/opencode.tar.gz \
-    && tar -xzf /tmp/opencode.tar.gz -C /tmp \
-    && mv /tmp/opencode /usr/local/bin/opencode \
-    && chmod +x /usr/local/bin/opencode \
-    && rm /tmp/opencode.tar.gz
-
-# ============================================================
-# CONFIGURACIÓN DEL WORKSPACE
-# ============================================================
-WORKDIR /workspace
-
-# Copiar configuración de OpenCode
-COPY .config/opencode/ /root/.config/opencode/
-COPY .opencode/ /workspace/.opencode/
-COPY .env.example /workspace/.env.example
-
-# Guardar respaldos por si se borra el volumen
-RUN mkdir -p /app-defaults/.opencode
-COPY .opencoderules /app-defaults/.opencoderules
-COPY .opencode/ /app-defaults/.opencode/
-
-# Crear estructura de directorios
-RUN mkdir -p \
-    /workspace/proyectos \
-    /root/.local/share/opencode \
-    /root/.cache/opencode \
-    /root/.config/opencode
-
-# Copiar proxy web y servicio de BD
-COPY artifacts/opencode-ui/proxy.mjs /app/proxy.mjs
-COPY artifacts/opencode-ui/public/ /app/public/
-COPY db-sync.mjs /app/db-sync.mjs
-
-# Instalar dependencias del proxy y sync
-RUN mkdir -p /app && cd /app && npm init -y && \
-    npm install express http-proxy-middleware pg ws --save
-
-
-# ══════════════════════════════════════════════════════════════
-# BUILD: Compilar React frontend y API server
-# ══════════════════════════════════════════════════════════════
-WORKDIR /build
-COPY package.json pnpm-workspace.yaml tsconfig.base.json tsconfig.json ./
-COPY lib/ ./lib/
-COPY artifacts/opencode-ui/ ./artifacts/opencode-ui/
-COPY artifacts/api-server/ ./artifacts/api-server/
-
-# Instalar dependencias del workspace de build
-RUN pnpm install --no-frozen-lockfile --ignore-scripts 2>&1 | tail -3
-
-# Build React frontend (BASE_PATH=/ para Docker, PORT solo para dev)
-ENV BASE_PATH=/ PORT=3000 NODE_ENV=production
-RUN pnpm --filter @workspace/opencode-ui run build 2>&1 | tail -5 && echo "✓ React build OK"
-
-# Build API server (TypeScript → JS)
-RUN pnpm --filter @workspace/api-server run build 2>&1 | tail -5 && echo "✓ API build OK"
-
-# Copiar artefactos compilados a /app/
-RUN mkdir -p /app/ui && cp -r /build/artifacts/opencode-ui/dist/public/. /app/ui/ && echo "✓ UI copiado"
-RUN mkdir -p /app/api-dist && cp -r /build/artifacts/api-server/dist/. /app/api-dist/ && echo "✓ API dist copiado"
-
-# Copiar script de inicio
-COPY docker/start.sh /usr/local/bin/start-opencode.sh
-RUN chmod +x /usr/local/bin/start-opencode.sh
-
-# Puertos
-EXPOSE 21293
-
-# Variables de entorno por defecto
-ENV PORT=21293
-ENV OPENCODE_INTERNAL_PORT=21294
-ENV SYNC_API_PORT=21295
-ENV OPENCODE_WORKSPACE=/workspace
-# DATABASE_URL se configura en EasyPanel > Environment Variables de tu servicio
-# NO pongas credenciales aquí — configúralas directamente en EasyPanel
-# Ejemplo: postgresql://postgres:TU_PASSWORD@postgres:5432/opencode
-# (El hostname 'postgres' es el nombre del servicio de BD en EasyPanel)
-
-# Volúmenes para persistencia
-VOLUME ["/workspace", "/root/.local/share/opencode"]
-
-CMD ["/usr/local/bin/start-opencode.sh"]
+CMD ["/app/docker-start.sh"]
