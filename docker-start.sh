@@ -55,7 +55,7 @@ fi
 # ── 5. Proxy ──────────────────────────────────────────────────────────────────
 echo "[5/5] Iniciando Proxy Web UI..."
 cd /app/artifacts/opencode-ui
-export PORT=${PORT:-21293}
+export PORT=${PORT:-80}
 export OPENCODE_PORT=${OPENCODE_PORT:-21294}
 export OPERATOR_PORT=${OPERATOR_PORT:-3001}
 export API_SERVER_PORT=${OPERATOR_PORT:-3001}
