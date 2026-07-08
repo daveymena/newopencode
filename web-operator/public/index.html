@@ -120,10 +120,15 @@
         </div>
       </div>
 
-      <!-- Screenshot Tab -->
+      <!-- Screenshot Tab — Vista en vivo del navegador -->
       <div id="tab-screenshot" class="panel-section">
-        <div id="screenshotContainer" class="screenshot-box">
-          <div class="screenshot-placeholder">Esperando screenshot...</div>
+        <div style="background:#111;border:1px solid #2a2a3e;border-radius:8px 8px 0 0;padding:6px 10px;display:flex;align-items:center;gap:8px;font-size:11px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#00ff88;display:inline-block;flex-shrink:0" id="liveDot"></span>
+          <span id="liveUrl" style="color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">Esperando...</span>
+          <span id="liveIter" style="color:#666;flex-shrink:0"></span>
+        </div>
+        <div id="screenshotContainer" class="screenshot-box" style="border-radius:0 0 8px 8px;border-top:none">
+          <div class="screenshot-placeholder">El navegador aparecerá aquí cuando comience una tarea...</div>
         </div>
       </div>
 
@@ -156,11 +161,18 @@ ws.onmessage = (event) => {
     case 'connected':
       addSystem('Sistema conectado');
       break;
+    case 'screenshot':
+      // 📡 Screenshot en vivo — mostrar inmediatamente en la pestaña Pantalla
+      showScreenshot(data.data);
+      if (data.url) document.getElementById('liveUrl') && (document.getElementById('liveUrl').textContent = data.url);
+      if (data.iteration) document.getElementById('liveIter') && (document.getElementById('liveIter').textContent = `Iteración ${data.iteration}/${data.maxIterations}`);
+      break;
     case 'task_started':
       taskRunning = true;
       updateUI();
       addSystem('🚀 Tarea iniciada');
       removeThinking();
+      showTab('screenshot'); // Auto-activar la pestaña de pantalla al iniciar tarea
       break;
     case 'task_completed':
       taskRunning = false;

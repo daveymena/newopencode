@@ -554,6 +554,16 @@ export class WebOperator {
         break;
       }
 
+      // 📡 Transmitir screenshot en vivo al frontend
+      this.onMessage?.({
+        type: 'screenshot',
+        data: screenshot,
+        url: pageInfo.url,
+        title: pageInfo.title,
+        iteration: iteration + 1,
+        maxIterations: this.maxIterations,
+      });
+
       // ── Detección de obstáculos ──
       if (await this.detectLoginPage()) {
         this.log('  Login detectado');

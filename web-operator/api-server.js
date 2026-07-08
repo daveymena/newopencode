@@ -26,6 +26,8 @@ app.use(express.static(resolve(__dirname, 'public')));
 let activeTask = null;
 let taskResult = null;
 let wsClients = [];
+let liveScreenshot = null;   // ← captura en vivo actual (base64 PNG)
+let liveAction = '';         // ← última acción del agente
 
 function broadcast(data) {
   const msg = JSON.stringify(data);
@@ -88,6 +90,17 @@ async function runTaskInBackground(task, url, headless) {
     headless: headless !== false,
     verbose: true,
     onMessage: (msg) => {
+      // Capturar screenshot y acción en vivo
+      if (msg.screenshot) {
+        liveScreenshot = msg.screenshot;
+      }
+      if (msg.action) {
+        liveAction = typeof msg.action === 'string' ? msg.action : JSON.stringify(msg.action);
+      }
+      if (msg.type === 'screenshot') {
+        liveScreenshot = msg.data;
+        liveAction = msg.action || liveAction;
+      }
       broadcast(msg);
     },
   });
@@ -134,7 +147,7 @@ app.get('/api/history', (req, res) => {
   });
 });
 
-// Get latest screenshot
+// Get latest screenshot (only last result)
 app.get('/api/screenshot', (req, res) => {
   if (taskResult?.screenshot) {
     const img = Buffer.from(taskResult.screenshot, 'base64');
@@ -145,6 +158,24 @@ app.get('/api/screenshot', (req, res) => {
     res.end(img);
   } else {
     res.status(404).json({ error: 'No screenshot available' });
+  }
+});
+
+// ── LIVE screenshot: se actualiza cada iteración del agente ──
+app.get('/api/live-screenshot', (req, res) => {
+  const shot = liveScreenshot || taskResult?.screenshot;
+  if (shot) {
+    const img = Buffer.from(shot, 'base64');
+    res.writeHead(200, {
+      'Content-Type': 'image/png',
+      'Content-Length': img.length,
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+      'X-Agent-Action': encodeURIComponent(liveAction || ''),
+      'X-Task-Running': activeTask ? 'true' : 'false',
+    });
+    res.end(img);
+  } else {
+    res.status(204).end(); // sin contenido todavía
   }
 });
 
