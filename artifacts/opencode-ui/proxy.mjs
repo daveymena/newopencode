@@ -41,9 +41,11 @@ app.get("/health", (req, res) => res.json({ status: "ok", proxy: true, timestamp
 
 
 // ── React App (frontend compilado) ─────────────────────────
-const UI_DIR = '/app/ui';
-const UI_INDEX = '/app/ui/index.html';
-const reactAvailable = existsSync(UI_DIR) && existsSync(UI_INDEX);
+const UI_DIR_DOCKER = '/app/ui';
+const UI_DIR_LOCAL = path.join(__dirname, 'ui');
+const UI_DIR = existsSync(UI_DIR_DOCKER) ? UI_DIR_DOCKER : UI_DIR_LOCAL;
+const UI_INDEX = path.join(UI_DIR, 'index.html');
+const reactAvailable = existsSync(UI_INDEX);
 if (reactAvailable) {
   app.use(express.static(UI_DIR, { index: false }));
   console.log('[proxy] ✓ Sirviendo React app desde /app/ui/');
