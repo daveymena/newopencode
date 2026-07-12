@@ -70,7 +70,7 @@ EXPOSE 80 21293 3001 21294 6080
 
 VOLUME ["/app/.chrome-session", "/app/web-operator/.site-memory", "/root/.config/opencode"]
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -sf http://localhost:21293/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+    CMD curl -sf http://localhost:3000/__health || exit 1
 
 CMD ["/app/docker-start.sh"]
