@@ -12,10 +12,10 @@ services:
       file: Dockerfile
     domains:
       - host: "$(PRIMARY_DOMAIN)"
-        port: 21293
+        port: 3000
         https: true
     env:
-      PORT: "21293"
+      PORT: "3000"
       OPENCODE_WORKSPACE: /workspace
       OPENCODE_SERVER_PASSWORD: "6715320Dvd."
       # Puertos internos (OpenCode engine + Web Operator)
@@ -66,7 +66,7 @@ services:
       # ---- Ollama (local en el mismo servidor) ----
       OLLAMA_HOST: ""
     ports:
-      - "21293:21293"
+      - "3000:3000"
 
     mounts:
       # Proyectos y workspace
