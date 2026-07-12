@@ -144,6 +144,12 @@ app.get("/__logout", (req, res) => {
   res.redirect("/__login");
 });
 
+// ── Healthcheck para Docker ──────────────────────────
+app.get("/__health", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.status(200).json({ status: "ok", uptime: process.uptime() });
+});
+
 // Middleware de protección global
 if (AUTH_PASS) {
   app.use((req, res, next) => {
